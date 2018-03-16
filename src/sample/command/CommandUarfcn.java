@@ -1,4 +1,4 @@
-package sample.xmodem.commands;
+package sample.command;
 
 
 import java.util.ArrayList;

@@ -145,8 +145,8 @@
                         <Insets top="8.0" />
                     </VBox.margin>
                     <children>
-                        <Button fx:id="readButton" lineSpacing="1.0" maxWidth="80.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="80.0" text="Read" wrapText="true" />
-                        <Button fx:id="writeButton" maxWidth="80.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="80.0" text="Send" />
+                        <Button fx:id="readButton" lineSpacing="1.0" maxWidth="80.0" mnemonicParsing="false" onAction="#readButtonHandler" prefHeight="25.0" prefWidth="80.0" text="Read" wrapText="true" />
+                        <Button fx:id="writeButton" maxWidth="80.0" mnemonicParsing="false" onAction="#writeButtonHandler" prefHeight="25.0" prefWidth="80.0" text="Send" />
                     </children>
                     <padding>
                         <Insets left="132.0" />

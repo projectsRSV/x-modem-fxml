@@ -1,4 +1,4 @@
-package sample.xmodem.parsers;
+package sample.parsers;
 
 
 import sample.xmodem.Xmodem;

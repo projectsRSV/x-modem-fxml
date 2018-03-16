@@ -16,15 +16,15 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
+import sample.command.*;
 import sample.exceptions.ListIsEmptyException;
 import sample.logic.I18N;
 import sample.task.SaveTask;
 import sample.uart.Uart;
 import sample.xmodem.Xmodem;
-import sample.xmodem.commands.*;
-import sample.xmodem.parsers.OperGetParser;
-import sample.xmodem.parsers.OperSetParser;
-import sample.xmodem.parsers.UarfcnGetParser;
+import sample.parsers.OperParser;
+import sample.parsers.OperSetParser;
+import sample.parsers.UarfcnParser;
 
 import java.io.File;
 import java.io.IOException;
@@ -125,7 +125,7 @@ public class Controller {
     @FXML
     private MenuItem scanningMenuItem;
 
-    private OperGuiList guiLists;
+    private OperGUIList guiLists;
     private List<MakeCommandInt> listUarfcn = new ArrayList<>(Arrays.asList(new CommandUarfcn(),
             new CommandUarfcn(), new CommandUarfcn(), new CommandUarfcn()));
     //    private List<MakeCommandInt> listUarfcn = new ArrayList<>(Arrays.asList(
@@ -137,7 +137,7 @@ public class Controller {
 
     @FXML
     public void initialize() {
-        guiLists = new OperGuiList();
+        guiLists = new OperGUIList();
         guiLists.setLongNameFieldList(Arrays.asList(longNameOp1, longNameOp2, longNameOp3, longNameOp4));
         guiLists.setShortNameFieldList(Arrays.asList(shortNameOp1, shortNameOp2, shortNameOp3, shortNameOp4));
         guiLists.setMccNameFieldList(Arrays.asList(fieldMCC1, fieldMCC2, fieldMCC3, fieldMCC4));
@@ -149,17 +149,13 @@ public class Controller {
         createMenuBar();
         createMainField();
         makeLabelActive();
-        readCommand();
-        sendCommand();
-
     }
 
     private void makeLabelActive() {
         EventHandler eventHandler = event -> {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("uarfcn.fxml"));
             Stage uarfcnStage = new Stage();
-            uarfcnStage.initStyle(StageStyle.UTILITY);
-            uarfcnStage.getIcons().add(new Image("sample/css/antenna.png"));
+            uarfcnStage.getIcons().add(new Image("/css/antenna.png"));
             uarfcnStage.setResizable(false);
             Parent parent = null;
             try {
@@ -173,17 +169,10 @@ public class Controller {
             UarfcnController uarfcnController = loader.getController();
             uarfcnController.setOperForm((CommandUarfcn) listUarfcn.get(numEvent - 1));
             Scene scene = new Scene(parent, 196, 175);
-            scene.getStylesheets().add("sample/css/GUI.css");
+            scene.getStylesheets().add("/css/GUI.css");
             uarfcnStage.initModality(Modality.APPLICATION_MODAL);
             uarfcnStage.setScene(scene);
             uarfcnStage.showAndWait();
-            /*if (listUarfcn.get(numEvent - 1).isSetUarfcn()) {
-                operatorLabel1.setFont(Font.font("Helvetica", FontPosture.ITALIC, 14));
-                System.out.println("set font");
-            } else {
-                operLabel.setFont(Font.font("Helvetica", FontPosture.REGULAR, 12));
-                System.out.println("disable font");
-            }*/
         };
         operatorLabel1.setOnMouseClicked(eventHandler);
         operatorLabel2.setOnMouseClicked(eventHandler);
@@ -287,8 +276,8 @@ public class Controller {
         fieldMCC4.setPromptText("255");
     }
 
-    private void sendCommand() {
-        writeButton.setOnAction(event -> {
+    @FXML
+    public void writeButtonHandler() {
             Task task = new Task() {
                 @Override
                 protected Object call() throws Exception {
@@ -356,31 +345,31 @@ public class Controller {
                     OperSetParser operSetHandler = new OperSetParser(acknowledgeSet);
                     for (MakeCommandInt m : operList) {
                         do {
-                            new SendCommand().send(m);
+                            SendCommand.send(m);
                             operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, 285));
                         } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("--- SET OPERATOR ---"));
                     }
                     updateProgress(3, max);
                     do {
-                        new SendCommand().send(Commands.DEL_FREQ);
+                        SendCommand.send(Commands.DEL_FREQ);
                         operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 27));
                     } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("3G base file removed."));
                     updateProgress(5, max);
                     for (MakeCommandInt m : uarfcnList) {
                         do {
-                            new SendCommand().send(m);
+                            SendCommand.send(m);
                             operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 21));
                         } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Adding to Base!"));
                     }
                     updateProgress(7, max);
                     do {
-                        new SendCommand().send(Commands.REFRESH);
+                        SendCommand.send(Commands.REFRESH);
                         operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 4));
                     } while (!acknowledgeSet.contains("OK"));
                     updateProgress(9, max);
 
                     if (timeSynchMenuItem.isSelected()) {
-                        new SendCommand().send(Commands.SET_CLOCK);
+                        SendCommand.send(Commands.SET_CLOCK);
                         operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 6));
                     }
                     updateProgress(max, max);
@@ -390,31 +379,30 @@ public class Controller {
             };
             createProgressBar(task);
             new Thread(task).start();
-        });
     }
 
-    private void readCommand() {
-        readButton.setOnAction(event -> {
-            Task task = new Task() {
-                @Override
-                protected Object call() throws Exception {
-                    if (!uart.getPort().isOpen()) throw new NullPointerException();
-                    new SendCommand().send(Commands.READ_FREQ);
-                    updateProgress(1, 5);
-                    UarfcnGetParser uarfcnGetHandler = new UarfcnGetParser(listUarfcn);
-                    uarfcnGetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 237));
-                    new SendCommand().send(Commands.READ_MAIN);
-                    updateProgress(3, 5);
-                    OperGetParser operGetHandler = new OperGetParser(guiLists);
-                    operGetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 261));
-                    updateProgress(5, 5);
-                    TimeUnit.MILLISECONDS.sleep(300);
-                    return null;
-                }
-            };
-            createProgressBar(task);
-            new Thread(task).start();
-        });
+    @FXML
+    public void readButtonHandler() {
+        Task task = new Task() {
+            @Override
+            protected Object call() throws Exception {
+                if (!uart.getPort().isOpen()) throw new NullPointerException();
+                Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 512);
+                SendCommand.send(Commands.READ_FREQ);
+                updateProgress(1, 5);
+                UarfcnParser uarfcnHandler = new UarfcnParser(listUarfcn);
+                uarfcnHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 237));
+                SendCommand.send(Commands.READ_MAIN);
+                updateProgress(3, 5);
+                OperParser operHandler = new OperParser(guiLists);
+                operHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 261));
+                updateProgress(5, 5);
+                TimeUnit.MILLISECONDS.sleep(300);
+                return null;
+            }
+        };
+        createProgressBar(task);
+        new Thread(task).start();
     }
 
     private void createProgressBar(Task task) {
@@ -431,7 +419,7 @@ public class Controller {
             progressStage.close();
         });
 
-        progressStage.initStyle(StageStyle.UTILITY);
+        progressStage.initStyle(StageStyle.TRANSPARENT);
         progressStage.setResizable(false);
         Parent parent = null;
         try {
@@ -442,7 +430,7 @@ public class Controller {
         ProgressController progressController = loader.getController();
         progressController.setTask(task);
         Scene scene = new Scene(parent);
-        scene.getStylesheets().add("sample/css/GUI.css");
+        scene.getStylesheets().add("/css/GUI.css");
         progressStage.initModality(Modality.APPLICATION_MODAL);
         progressStage.setScene(scene);
         progressStage.show();

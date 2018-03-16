@@ -10,7 +10,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import sample.logic.I18N;
 import sample.xmodem.Xmodem;
-import sample.xmodem.commands.CommandUarfcn;
+import sample.command.CommandUarfcn;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +38,7 @@ public class UarfcnController {
 
     @FXML
     public void initialize() {
+        saveButton.textProperty().bind(I18N.createStringBinding("button.write"));
         textFieldList = new ArrayList<>(Arrays.asList(uarfcnField1, uarfcnField2, uarfcnField3, uarfcnField4));
         notificationLabel.getStyleClass().add("label-notif-uarfcn");
         EventHandler<KeyEvent> enableBtnAndSetNotifHandler = event -> {

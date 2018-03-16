@@ -1,17 +1,17 @@
-package sample.xmodem.parsers;
+package sample.parsers;
 
 
 import javafx.scene.control.SpinnerValueFactory;
-import sample.main.OperGuiList;
+import sample.main.OperGUIList;
 import sample.xmodem.Xmodem;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class OperGetParser {
-    private OperGuiList guiLists;
+public class OperParser {
+    private OperGUIList guiLists;
 
-    public OperGetParser(OperGuiList guiLists) {
+    public OperParser(OperGUIList guiLists) {
         this.guiLists = guiLists;
     }
 
@@ -37,7 +37,8 @@ public class OperGetParser {
         List<String> wcdmaList = new ArrayList<>();
 
         for (String s : list) {
-            String[] lines = s.split("[.,\\u0020]");
+//            String[] lines = s.split("[.,\\u0020]");
+            String[] lines = s.split("[\\s+]");
             List<String> stringList = new ArrayList<>();
             for (String line : lines) {
                 if (!"".equals(line))

@@ -19,6 +19,24 @@ public class SaveTask extends Task {
         this.file = file;
     }
 
+    @Override
+    protected Object call() throws PortUnreachableException {
+        List<File> fileList = createFiles(file);
+        List<String> commandList = createCommands(file);
+        try {
+            for (int i = 0; i < fileList.size(); i++) {
+                updateProgress(i, fileList.size());
+                if (Xmodem.DEBUG) System.out.println(file.getAbsolutePath());
+                Xmodem.receiveFile(fileList.get(i), commandList.get(i));
+            }
+            updateProgress(fileList.size(), fileList.size());
+            TimeUnit.MILLISECONDS.sleep(300);
+        } catch (InterruptedException e) {
+            if (Xmodem.DEBUG) e.printStackTrace();
+        }
+        return null;
+    }
+
     private List<String> createCommands(File file) {
         List<String> list = new ArrayList<>();
         if (file.getAbsolutePath().endsWith(".txt")) {
@@ -43,21 +61,4 @@ public class SaveTask extends Task {
         return fileList;
     }
 
-    @Override
-    protected Object call() throws PortUnreachableException {
-        List<File> fileList = createFiles(file);
-        List<String> commandList = createCommands(file);
-        try {
-            for (int i = 0; i < fileList.size(); i++) {
-                updateProgress(i, fileList.size());
-                if (Xmodem.DEBUG) System.out.println(file.getAbsolutePath());
-                Xmodem.receiveFile(fileList.get(i), commandList.get(i));
-            }
-            updateProgress(fileList.size(), fileList.size());
-            TimeUnit.MILLISECONDS.sleep(300);
-        } catch (InterruptedException e) {
-            if (Xmodem.DEBUG) e.printStackTrace();
-        }
-        return null;
-    }
 }

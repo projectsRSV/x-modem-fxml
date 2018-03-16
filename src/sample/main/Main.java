@@ -15,9 +15,9 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.titleProperty().bind(I18N.createStringBinding("title.stage", 1, 4));
-        primaryStage.getIcons().add(new Image("sample/css/antenna.png"));
+        primaryStage.getIcons().add(new Image("/css/antenna.png"));
         Scene scene = new Scene(root, 515, 315);
-        scene.getStylesheets().add("sample/css/GUI.css");
+        scene.getStylesheets().add("/css/GUI.css");
         primaryStage.setScene(scene);
         setUserAgentStylesheet(STYLESHEET_CASPIAN);
         if (Xmodem.DEBUG) primaryStage.setX(1370);

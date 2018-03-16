@@ -1,18 +1,18 @@
-package sample.xmodem.parsers;
+package sample.parsers;
 
 
 import sample.xmodem.Xmodem;
-import sample.xmodem.commands.CommandUarfcn;
-import sample.xmodem.commands.MakeCommandInt;
+import sample.command.CommandUarfcn;
+import sample.command.MakeCommandInt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class UarfcnGetParser {
+public class UarfcnParser {
     private List<MakeCommandInt> listUarfcn;
 
-    public UarfcnGetParser(List<MakeCommandInt> listUarfcn) {
+    public UarfcnParser(List<MakeCommandInt> listUarfcn) {
         this.listUarfcn = listUarfcn;
     }
 

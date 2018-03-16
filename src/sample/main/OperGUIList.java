@@ -7,7 +7,7 @@ import javafx.scene.control.TextField;
 
 import java.util.List;
 
-public class OperGuiList {
+public class OperGUIList {
     private List<TextField> longNameFieldList;
     private List<TextField> shortNameFieldList;
     private List<TextField> mccNameFieldList;

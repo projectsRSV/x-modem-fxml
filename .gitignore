@@ -26,6 +26,8 @@ hs_err_pid*
 .gitignore
 .idea/
 out/
-pom.xml
+#pom.xml
 target/
 x-modem-fxml.iml
+src/test/
+#!/pom.xml
