@@ -8,7 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import sample.logic.I18N;
+import sample.utils.I18N;
 import sample.xmodem.Xmodem;
 import sample.command.CommandUarfcn;
 
@@ -52,7 +52,7 @@ public class UarfcnController {
             }
         };
         for (TextField t : textFieldList) {
-            t.setTextFormatter(Controller.limitDigit(5));
+            t.setTextFormatter(MainController.limitDigit(5));
             t.setOnKeyReleased(enableBtnAndSetNotifHandler);
         }
         saveButton.setOnAction(event -> {

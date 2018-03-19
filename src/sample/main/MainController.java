@@ -2,7 +2,7 @@ package sample.main;
 
 import com.fazecast.jSerialComm.SerialPort;
 import javafx.concurrent.Task;
-import javafx.event.EventHandler;
+import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,7 +10,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.Lighting;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -18,20 +17,20 @@ import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import sample.command.*;
 import sample.exceptions.ListIsEmptyException;
-import sample.logic.I18N;
-import sample.task.SaveTask;
-import sample.uart.Uart;
-import sample.xmodem.Xmodem;
 import sample.parsers.OperParser;
 import sample.parsers.OperSetParser;
 import sample.parsers.UarfcnParser;
+import sample.task.SaveTask;
+import sample.utils.I18N;
+import sample.xmodem.Uart;
+import sample.xmodem.Xmodem;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class Controller {
+public class MainController {
     @FXML
     private Label operatorLabel1;
     @FXML
@@ -148,36 +147,44 @@ public class Controller {
         scanAndConnectToDevice();
         createMenuBar();
         createMainField();
-        makeLabelActive();
     }
 
-    private void makeLabelActive() {
-        EventHandler eventHandler = event -> {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("uarfcn.fxml"));
-            Stage uarfcnStage = new Stage();
-            uarfcnStage.getIcons().add(new Image("/css/antenna.png"));
-            uarfcnStage.setResizable(false);
-            Parent parent = null;
-            try {
-                parent = loader.load();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Label operLabel = (Label) event.getSource();
-            String idStr = operLabel.getId();
-            int numEvent = Integer.parseInt(String.valueOf(idStr.charAt(idStr.length() - 1)));
-            UarfcnController uarfcnController = loader.getController();
-            uarfcnController.setOperForm((CommandUarfcn) listUarfcn.get(numEvent - 1));
-            Scene scene = new Scene(parent, 196, 175);
-            scene.getStylesheets().add("/css/GUI.css");
-            uarfcnStage.initModality(Modality.APPLICATION_MODAL);
-            uarfcnStage.setScene(scene);
-            uarfcnStage.showAndWait();
-        };
-        operatorLabel1.setOnMouseClicked(eventHandler);
-        operatorLabel2.setOnMouseClicked(eventHandler);
-        operatorLabel3.setOnMouseClicked(eventHandler);
-        operatorLabel4.setOnMouseClicked(eventHandler);
+    @FXML
+    public void makeLabelActive(Event event) {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("uarfcn.fxml"));
+        Stage uarfcnStage = new Stage();
+        uarfcnStage.getIcons().add(new Image("/css/antenna.png"));
+        uarfcnStage.setResizable(false);
+        Parent parent = null;
+        try {
+            parent = loader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Label operLabel = (Label) event.getSource();
+        String idStr = operLabel.getId();
+        int numEvent = Integer.parseInt(String.valueOf(idStr.charAt(idStr.length() - 1)));
+        UarfcnController uarfcnController = loader.getController();
+        uarfcnController.setOperForm((CommandUarfcn) listUarfcn.get(numEvent - 1));
+        Scene scene = new Scene(parent, 196, 175);
+        scene.getStylesheets().add("/css/GUI.css");
+        uarfcnStage.initModality(Modality.APPLICATION_MODAL);
+        uarfcnStage.setScene(scene);
+        uarfcnStage.showAndWait();
+    }
+
+    @FXML
+    public void scaleHandlerOn(Event event) {
+        Label label = (Label) event.getSource();
+        label.setScaleX(1.2);
+        label.setScaleY(1.3);
+    }
+
+    @FXML
+    public void scaleHandlerOff(Event event) {
+        Label label = (Label) event.getSource();
+        label.setScaleX(1.0);
+        label.setScaleY(1.0);
     }
 
     private void createMainField() {
@@ -207,24 +214,6 @@ public class Controller {
         operatorLabel2.getStyleClass().add("label-operator-main-norm");
         operatorLabel3.getStyleClass().add("label-operator-main-norm");
         operatorLabel4.getStyleClass().add("label-operator-main-norm");
-        EventHandler<MouseEvent> scaleHandlerOn = event -> {
-            Label label = (Label) event.getSource();
-            label.setScaleX(1.2);
-            label.setScaleY(1.3);
-        };
-        EventHandler<MouseEvent> scaleHandlerOff = event -> {
-            Label label = (Label) event.getSource();
-            label.setScaleX(1);
-            label.setScaleY(1);
-        };
-        operatorLabel1.setOnMouseEntered(scaleHandlerOn);
-        operatorLabel2.setOnMouseEntered(scaleHandlerOn);
-        operatorLabel3.setOnMouseEntered(scaleHandlerOn);
-        operatorLabel4.setOnMouseEntered(scaleHandlerOn);
-        operatorLabel1.setOnMouseExited(scaleHandlerOff);
-        operatorLabel2.setOnMouseExited(scaleHandlerOff);
-        operatorLabel3.setOnMouseExited(scaleHandlerOff);
-        operatorLabel4.setOnMouseExited(scaleHandlerOff);
 
         Tooltip tooltip = new Tooltip();
         tooltip.textProperty().bind(I18N.createStringBinding("tooltip.operator"));
@@ -278,107 +267,107 @@ public class Controller {
 
     @FXML
     public void writeButtonHandler() {
-            Task task = new Task() {
-                @Override
-                protected Object call() throws Exception {
-                    int max = 10;
-                    List<MakeCommandInt> listMain = new ArrayList<>();
-                    CommandOper operForm;
-                    updateProgress(0, max);
-                    if (checkBoxOp1.isSelected()) {
-                        operForm = new CommandOper();
-                        operForm.setIndex(1);
-                        operForm.setLongName(longNameOp1.getText());
-                        operForm.setShortName(shortNameOp1.getText());
-                        operForm.setMcc(fieldMCC1.getText());
-                        operForm.setMnc(spinnerMNC1.getValue().byteValue());
-                        operForm.setGsm(checkBoxGSM1.isSelected() ? 1 : 0);
-                        operForm.setWcdma(checkBoxWCDMA1.isSelected() ? 1 : 0);
-                        listMain.add(operForm);
-                    }
-                    if (checkBoxOp2.isSelected()) {
-                        operForm = new CommandOper();
-                        operForm.setIndex(2);
-                        operForm.setLongName(longNameOp2.getText());
-                        operForm.setShortName(shortNameOp2.getText());
-                        operForm.setMcc(fieldMCC2.getText());
-                        operForm.setMnc(spinnerMNC2.getValue().byteValue());
-                        operForm.setGsm(checkBoxGSM2.isSelected() ? 1 : 0);
-                        operForm.setWcdma(checkBoxWCDMA2.isSelected() ? 1 : 0);
-                        listMain.add(operForm);
-                    }
-                    if (checkBoxOp3.isSelected()) {
-                        operForm = new CommandOper();
-                        operForm.setIndex(3);
-                        operForm.setLongName(longNameOp3.getText());
-                        operForm.setShortName(shortNameOp3.getText());
-                        operForm.setMcc(fieldMCC3.getText());
-                        operForm.setMnc(spinnerMNC3.getValue().byteValue());
-                        operForm.setGsm(checkBoxGSM3.isSelected() ? 1 : 0);
-                        operForm.setWcdma(checkBoxWCDMA3.isSelected() ? 1 : 0);
-                        listMain.add(operForm);
-                    }
-                    if (checkBoxOp4.isSelected()) {
-                        operForm = new CommandOper();
-                        operForm.setIndex(4);
-                        operForm.setLongName(longNameOp4.getText());
-                        operForm.setShortName(shortNameOp4.getText());
-                        operForm.setMcc(fieldMCC4.getText());
-                        operForm.setMnc(spinnerMNC4.getValue().byteValue());
-                        operForm.setGsm(checkBoxGSM4.isSelected() ? 1 : 0);
-                        operForm.setWcdma(checkBoxWCDMA4.isSelected() ? 1 : 0);
-                        listMain.add(operForm);
-                    }
-                    updateProgress(1, max);
-                    List<MakeCommandInt> operList = new ArrayList<>();
-                    List<MakeCommandInt> uarfcnList = new ArrayList<>();
-                    for (MakeCommandInt o : listMain) {
-                        if (o.isValid()) operList.add(o);
-                        else throw new ListIsEmptyException();
-                    }
-                    for (MakeCommandInt o : listUarfcn) {
-                        if (o.isValid()) uarfcnList.add(o);
-                    }
-                    if (!uart.getPort().isOpen()) throw new NullPointerException();
-
-                    Set<String> acknowledgeSet = new HashSet<>();
-                    OperSetParser operSetHandler = new OperSetParser(acknowledgeSet);
-                    for (MakeCommandInt m : operList) {
-                        do {
-                            SendCommand.send(m);
-                            operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, 285));
-                        } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("--- SET OPERATOR ---"));
-                    }
-                    updateProgress(3, max);
-                    do {
-                        SendCommand.send(Commands.DEL_FREQ);
-                        operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 27));
-                    } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("3G base file removed."));
-                    updateProgress(5, max);
-                    for (MakeCommandInt m : uarfcnList) {
-                        do {
-                            SendCommand.send(m);
-                            operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 21));
-                        } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Adding to Base!"));
-                    }
-                    updateProgress(7, max);
-                    do {
-                        SendCommand.send(Commands.REFRESH);
-                        operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 4));
-                    } while (!acknowledgeSet.contains("OK"));
-                    updateProgress(9, max);
-
-                    if (timeSynchMenuItem.isSelected()) {
-                        SendCommand.send(Commands.SET_CLOCK);
-                        operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 6));
-                    }
-                    updateProgress(max, max);
-                    TimeUnit.MILLISECONDS.sleep(300);
-                    return null;
+        Task task = new Task() {
+            @Override
+            protected Object call() throws Exception {
+                int max = 10;
+                List<MakeCommandInt> listMain = new ArrayList<>();
+                CommandOper operForm;
+                updateProgress(0, max);
+                if (checkBoxOp1.isSelected()) {
+                    operForm = new CommandOper();
+                    operForm.setIndex(1);
+                    operForm.setLongName(longNameOp1.getText());
+                    operForm.setShortName(shortNameOp1.getText());
+                    operForm.setMcc(fieldMCC1.getText());
+                    operForm.setMnc(spinnerMNC1.getValue().byteValue());
+                    operForm.setGsm(checkBoxGSM1.isSelected() ? 1 : 0);
+                    operForm.setWcdma(checkBoxWCDMA1.isSelected() ? 1 : 0);
+                    listMain.add(operForm);
                 }
-            };
-            createProgressBar(task);
-            new Thread(task).start();
+                if (checkBoxOp2.isSelected()) {
+                    operForm = new CommandOper();
+                    operForm.setIndex(2);
+                    operForm.setLongName(longNameOp2.getText());
+                    operForm.setShortName(shortNameOp2.getText());
+                    operForm.setMcc(fieldMCC2.getText());
+                    operForm.setMnc(spinnerMNC2.getValue().byteValue());
+                    operForm.setGsm(checkBoxGSM2.isSelected() ? 1 : 0);
+                    operForm.setWcdma(checkBoxWCDMA2.isSelected() ? 1 : 0);
+                    listMain.add(operForm);
+                }
+                if (checkBoxOp3.isSelected()) {
+                    operForm = new CommandOper();
+                    operForm.setIndex(3);
+                    operForm.setLongName(longNameOp3.getText());
+                    operForm.setShortName(shortNameOp3.getText());
+                    operForm.setMcc(fieldMCC3.getText());
+                    operForm.setMnc(spinnerMNC3.getValue().byteValue());
+                    operForm.setGsm(checkBoxGSM3.isSelected() ? 1 : 0);
+                    operForm.setWcdma(checkBoxWCDMA3.isSelected() ? 1 : 0);
+                    listMain.add(operForm);
+                }
+                if (checkBoxOp4.isSelected()) {
+                    operForm = new CommandOper();
+                    operForm.setIndex(4);
+                    operForm.setLongName(longNameOp4.getText());
+                    operForm.setShortName(shortNameOp4.getText());
+                    operForm.setMcc(fieldMCC4.getText());
+                    operForm.setMnc(spinnerMNC4.getValue().byteValue());
+                    operForm.setGsm(checkBoxGSM4.isSelected() ? 1 : 0);
+                    operForm.setWcdma(checkBoxWCDMA4.isSelected() ? 1 : 0);
+                    listMain.add(operForm);
+                }
+                updateProgress(1, max);
+                List<MakeCommandInt> operList = new ArrayList<>();
+                List<MakeCommandInt> uarfcnList = new ArrayList<>();
+                for (MakeCommandInt o : listMain) {
+                    if (o.isValid()) operList.add(o);
+                    else throw new ListIsEmptyException();
+                }
+                for (MakeCommandInt o : listUarfcn) {
+                    if (o.isValid()) uarfcnList.add(o);
+                }
+                if (!uart.getPort().isOpen()) throw new NullPointerException();
+
+                Set<String> acknowledgeSet = new HashSet<>();
+                OperSetParser operSetHandler = new OperSetParser(acknowledgeSet);
+                for (MakeCommandInt m : operList) {
+                    do {
+                        SendCommand.send(m);
+                        operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, 285));
+                    } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("--- SET OPERATOR ---"));
+                }
+                updateProgress(3, max);
+                do {
+                    SendCommand.send(Commands.DEL_FREQ);
+                    operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 27));
+                } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("3G base file removed."));
+                updateProgress(5, max);
+                for (MakeCommandInt m : uarfcnList) {
+                    do {
+                        SendCommand.send(m);
+                        operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 21));
+                    } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Adding to Base!"));
+                }
+                updateProgress(7, max);
+                do {
+                    SendCommand.send(Commands.REFRESH);
+                    operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 4));
+                } while (!acknowledgeSet.contains("OK"));
+                updateProgress(9, max);
+
+                if (timeSynchMenuItem.isSelected()) {
+                    SendCommand.send(Commands.SET_CLOCK);
+                    operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 6));
+                }
+                updateProgress(max, max);
+                TimeUnit.MILLISECONDS.sleep(300);
+                return null;
+            }
+        };
+        createProgressBar(task);
+        new Thread(task).start();
     }
 
     @FXML
@@ -478,56 +467,74 @@ public class Controller {
         timeSynchMenuItem.textProperty().bind(I18N.createStringBinding("menu.timeSynch"));
     }
 
-    public void setAlarmMessage(String string) {
+    private void setAlarmMessage(String string) {
         notification.textProperty().bind(I18N.createStringBinding(string));
     }
 
     private void scanAndConnectToDevice() {
-        uart = new Uart();
-        comboBox.setItems(uart.getPortListString());
-        Callback cellFactory = new Callback<ListView<SerialPort>, ListCell<SerialPort>>() {
-            @Override
-            public ListCell<SerialPort> call(ListView<SerialPort> param) {
-                return new ListCell<SerialPort>() {
+//        Task task = new Task() {
+//            @Override
+//            protected Object call() throws Exception {
+                uart = new Uart();
+                comboBox.setItems(uart.getPortListString());
+                Callback cellFactory = new Callback<ListView<SerialPort>, ListCell<SerialPort>>() {
                     @Override
-                    protected void updateItem(SerialPort item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item == null || empty) {
-                            setText(null);
-                        } else {
-                            setText(item.getDescriptivePortName());
-                        }
+                    public ListCell<SerialPort> call(ListView<SerialPort> param) {
+                        return new ListCell<SerialPort>() {
+                            @Override
+                            protected void updateItem(SerialPort item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item == null || empty) {
+                                    setText(null);
+                                } else {
+                                    setText(item.getDescriptivePortName());
+                                }
+                            }
+                        };
                     }
                 };
-            }
-        };
-        comboBox.valueProperty().addListener((observable, oldValue, newValue) -> uart.setPort((SerialPort) newValue));
-        comboBox.setCellFactory(cellFactory);
-        comboBox.setButtonCell((ListCell) cellFactory.call(null));
-        connectButton.setOnAction(event -> {
-            if (connectButton.isSelected()) {
-                try {
-                    uart.openPortDevice();
-                    Xmodem.setSerialPort(uart.getPort());
-                    connectButton.setSelected(true);
-                    connectButton.textProperty().bind(I18N.createStringBinding("button.disconnect"));
-                    setAlarmMessage("null");
-                } catch (Exception e) {
-                    connectButton.setSelected(false);
-                    connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
-                    setAlarmMessage("connect.device");
-                }
-            } else {
-                uart.getPort().closePort();
-                Xmodem.setSerialPort(null);
-                connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
-                connectButton.setSelected(false);
-                if (Xmodem.DEBUG) System.out.println("port is closed");
-            }
-        });
+                comboBox.valueProperty().addListener((observable, oldValue, newValue) -> uart.setPort((SerialPort) newValue));
+                comboBox.setCellFactory(cellFactory);
+                comboBox.setButtonCell((ListCell) cellFactory.call(null));
+//                return null;
+//            }
+//        };
+//        new Thread(task).start();
     }
 
-    public static TextFormatter<?> limitString(int i) {
+    @FXML
+    public void connectBtnHandler() {
+        Task task = new Task() {
+            @Override
+            protected Object call() throws Exception {
+                if (connectButton.isSelected()) {
+                    try {
+                        uart.openPortDevice();
+                        Xmodem.setSerialPort(uart.getPort());
+                        connectButton.setSelected(true);
+//                        connectButton.textProperty().bind(I18N.createStringBinding("button.disconnect"));
+//                        setAlarmMessage("null");
+                    } catch (Exception e) {
+                        connectButton.setSelected(false);
+                        connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
+//                        setAlarmMessage("connect.device");
+                    }
+                } else {
+                    uart.getPort().closePort();
+                    Xmodem.setSerialPort(null);
+                    connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
+                    connectButton.setSelected(false);
+                    if (Xmodem.DEBUG) System.out.println("port is closed");
+                }
+                return null;
+            }
+        };
+        task.setOnFailed(event -> setAlarmMessage("connect.device"));
+        task.setOnSucceeded(event -> setAlarmMessage("null"));
+        new Thread(task).start();
+    }
+
+    private static TextFormatter<?> limitString(int i) {
         return new TextFormatter<>(change -> {
             if (!change.getText().isEmpty())
                 return (change.getText().matches("\\w+") && change.getControlNewText().length() <= i) ? change : null;

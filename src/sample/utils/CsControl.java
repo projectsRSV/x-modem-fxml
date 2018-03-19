@@ -1,4 +1,4 @@
-package sample.logic;
+package sample.utils;
 
 
 import java.io.IOException;

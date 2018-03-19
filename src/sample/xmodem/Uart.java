@@ -1,9 +1,8 @@
-package sample.uart;
+package sample.xmodem;
 
 import com.fazecast.jSerialComm.SerialPort;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import sample.xmodem.Xmodem;
 
 import java.net.PortUnreachableException;
 

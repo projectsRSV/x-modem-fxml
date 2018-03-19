@@ -1,34 +1,25 @@
 .root {
     -fx-background-color: #e3e3e3;
     -fx-font-size: 12;
+    -fx-font-family: sans-serif;
 }
 
 .label-operator-main-bold {
-    -fx-font: 12px Tahoma;
     -fx-font-weight: bold;
 }
 
 .label-operator-main-norm {
-    -fx-font: 12px Tahoma;
     -fx-font-weight: normal;
 }
 
 .label-notif-main {
     -fx-font-size: 13px;
-    -fx-font-family: "Arial Black";
-    /*-fx-font-weight: bold;*/
     -fx-text-fill: red;
-    /*-fx-fill: #818181;*/
-    /*-fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.5), 0, 0, 0, 1);*/
 }
 
 .label-notif-uarfcn {
-    -fx-font-size: 13px;
-    -fx-font-family: "Arial Black";
-    /*-fx-font-weight: bold;*/
+    -fx-font-size: 13;
     -fx-text-fill: red;
-    /*-fx-fill: #818181;*/
-    /*-fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.5), 0, 0, 0, 1);*/
 }
 
 .menu-my {
@@ -40,6 +31,6 @@
 }
 
 .tooltip {
-    -fx-font: 14px Tahoma;
+    -fx-font-size: 14;
     -fx-font-weight: normal;
 }
