@@ -9,17 +9,21 @@
 }
 
 .label-operator-main-norm {
-    -fx-font-weight: normal;
+    /*-fx-font-weight: normal;*/
+    -fx-font-weight: bold;
+    -fx-text-fill: blue;
 }
 
 .label-notif-main {
-    -fx-font-size: 13px;
+    -fx-font-size: 13;
     -fx-text-fill: red;
+    -fx-font-weight: bold;
 }
 
 .label-notif-uarfcn {
     -fx-font-size: 13;
     -fx-text-fill: red;
+    -fx-font-weight: bold;
 }
 
 .menu-my {

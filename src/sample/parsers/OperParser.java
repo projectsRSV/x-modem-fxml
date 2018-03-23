@@ -55,8 +55,16 @@ public class OperParser {
         }
         try {
             for (int i = 0; i < longNameList.size(); i++) {
-                guiLists.getLongNameFieldList().get(i).setText("");
-                guiLists.getLongNameFieldList().get(i).setText(longNameList.get(i));
+                try {
+                    guiLists.getLongNameFieldList().get(i).setText("");
+                    guiLists.getLongNameFieldList().get(i).setText(longNameList.get(i));
+                } catch (NullPointerException e) {
+                    System.out.println("\n******************************************");
+                    System.out.println("longNameList.size = " + longNameList.size());
+                    System.out.println("LongNmaeFieldList = " + guiLists.getLongNameFieldList());
+                    System.out.println("******************************************");
+                    throw new NullPointerException();
+                }
             }
             for (int i = 0; i < shortNameList.size(); i++) {
                 shortNameList.get(i);
@@ -65,8 +73,16 @@ public class OperParser {
                 guiLists.getShortNameFieldList().get(i).setText(shortNameList.get(i));
             }
             for (int i = 0; i < mccList.size(); i++) {
-                guiLists.getMccNameFieldList().get(i).setText("");
-                guiLists.getMccNameFieldList().get(i).setText(mccList.get(i));
+                try {
+                    guiLists.getMccNameFieldList().get(i).setText("");
+                    guiLists.getMccNameFieldList().get(i).setText(mccList.get(i));
+                } catch (NullPointerException e) {
+                    System.out.println("\n******************************************");
+                    System.out.println("MccNameFieldList.size = " + mccList.size());
+                    System.out.println("mccList = " + guiLists.getMccNameFieldList());
+                    System.out.println("******************************************");
+                    throw new NullPointerException();
+                }
             }
             for (int i = 0; i < mncList.size(); i++) {
 //                guiLists.getSpinnerList().get(i).getValueFactory().setValue(Integer.valueOf(mncList.get(i)));

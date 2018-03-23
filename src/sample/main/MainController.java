@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.effect.Lighting;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -150,11 +151,13 @@ public class MainController {
     }
 
     @FXML
-    public void makeLabelActive(Event event) {
+    public void makeLabelActive(MouseEvent event) {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("uarfcn.fxml"));
         Stage uarfcnStage = new Stage();
         uarfcnStage.getIcons().add(new Image("/css/antenna.png"));
         uarfcnStage.setResizable(false);
+        uarfcnStage.setX(event.getScreenX() - 50);
+        uarfcnStage.setY(event.getScreenY() + 20);
         Parent parent = null;
         try {
             parent = loader.load();
@@ -376,7 +379,7 @@ public class MainController {
             @Override
             protected Object call() throws Exception {
                 if (!uart.getPort().isOpen()) throw new NullPointerException();
-                Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 512);
+                Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, uart.getPort().bytesAvailable());
                 SendCommand.send(Commands.READ_FREQ);
                 updateProgress(1, 5);
                 UarfcnParser uarfcnHandler = new UarfcnParser(listUarfcn);
@@ -397,6 +400,10 @@ public class MainController {
     private void createProgressBar(Task task) {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("progressBar.fxml"));
         Stage progressStage = new Stage();
+        Stage priStage = (Stage) readButton.getScene().getWindow();
+        progressStage.setX(priStage.getX() + 125);
+        progressStage.setY(priStage.getY() + 100);
+        progressStage.setOnCloseRequest(event -> task.cancel());
         task.setOnSucceeded(event1 -> {
             setAlarmMessage("null");
             progressStage.close();
@@ -404,11 +411,13 @@ public class MainController {
         task.setOnFailed(event1 -> {
             if (task.getException().toString().contains("ListIsEmptyException")) {
                 setAlarmMessage("name.long");
+            } else if (task.getException().toString().contains("RebootDeviceException")) {
+                setAlarmMessage("reboot.device");
             } else setAlarmMessage("connect.device");
             progressStage.close();
         });
 
-        progressStage.initStyle(StageStyle.TRANSPARENT);
+        progressStage.initStyle(StageStyle.DECORATED);
         progressStage.setResizable(false);
         Parent parent = null;
         try {
@@ -418,7 +427,7 @@ public class MainController {
         }
         ProgressController progressController = loader.getController();
         progressController.setTask(task);
-        Scene scene = new Scene(parent);
+        Scene scene = new Scene(parent, 270, 17);
         scene.getStylesheets().add("/css/GUI.css");
         progressStage.initModality(Modality.APPLICATION_MODAL);
         progressStage.setScene(scene);
@@ -475,27 +484,27 @@ public class MainController {
 //        Task task = new Task() {
 //            @Override
 //            protected Object call() throws Exception {
-                uart = new Uart();
-                comboBox.setItems(uart.getPortListString());
-                Callback cellFactory = new Callback<ListView<SerialPort>, ListCell<SerialPort>>() {
+        uart = new Uart();
+        comboBox.setItems(uart.getPortListString());
+        Callback cellFactory = new Callback<ListView<SerialPort>, ListCell<SerialPort>>() {
+            @Override
+            public ListCell<SerialPort> call(ListView<SerialPort> param) {
+                return new ListCell<SerialPort>() {
                     @Override
-                    public ListCell<SerialPort> call(ListView<SerialPort> param) {
-                        return new ListCell<SerialPort>() {
-                            @Override
-                            protected void updateItem(SerialPort item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item == null || empty) {
-                                    setText(null);
-                                } else {
-                                    setText(item.getDescriptivePortName());
-                                }
-                            }
-                        };
+                    protected void updateItem(SerialPort item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item == null || empty) {
+                            setText(null);
+                        } else {
+                            setText(item.getDescriptivePortName());
+                        }
                     }
                 };
-                comboBox.valueProperty().addListener((observable, oldValue, newValue) -> uart.setPort((SerialPort) newValue));
-                comboBox.setCellFactory(cellFactory);
-                comboBox.setButtonCell((ListCell) cellFactory.call(null));
+            }
+        };
+        comboBox.valueProperty().addListener((observable, oldValue, newValue) -> uart.setPort((SerialPort) newValue));
+        comboBox.setCellFactory(cellFactory);
+        comboBox.setButtonCell((ListCell) cellFactory.call(null));
 //                return null;
 //            }
 //        };
@@ -504,34 +513,36 @@ public class MainController {
 
     @FXML
     public void connectBtnHandler() {
-        Task task = new Task() {
-            @Override
-            protected Object call() throws Exception {
-                if (connectButton.isSelected()) {
-                    try {
-                        uart.openPortDevice();
-                        Xmodem.setSerialPort(uart.getPort());
-                        connectButton.setSelected(true);
-//                        connectButton.textProperty().bind(I18N.createStringBinding("button.disconnect"));
-//                        setAlarmMessage("null");
-                    } catch (Exception e) {
-                        connectButton.setSelected(false);
-                        connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
-//                        setAlarmMessage("connect.device");
-                    }
-                } else {
-                    uart.getPort().closePort();
-                    Xmodem.setSerialPort(null);
-                    connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
-                    connectButton.setSelected(false);
-                    if (Xmodem.DEBUG) System.out.println("port is closed");
-                }
-                return null;
+//        Task task = new Task() {
+//            @Override
+//            protected Object call() throws Exception {
+        if (connectButton.isSelected()) {
+            try {
+                uart.openPortDevice();
+                Xmodem.setSerialPort(uart.getPort());
+                connectButton.setSelected(true);
+                connectButton.textProperty().bind(I18N.createStringBinding("button.disconnect"));
+                new Thread(() -> Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 2000,
+                        uart.getPort().bytesAvailable())).start();
+                setAlarmMessage("null");
+            } catch (Exception e) {
+                connectButton.setSelected(false);
+                connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
+                setAlarmMessage("connect.device");
             }
-        };
-        task.setOnFailed(event -> setAlarmMessage("connect.device"));
-        task.setOnSucceeded(event -> setAlarmMessage("null"));
-        new Thread(task).start();
+        } else {
+            uart.getPort().closePort();
+            Xmodem.setSerialPort(null);
+            connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
+            connectButton.setSelected(false);
+            if (Xmodem.DEBUG) System.out.println("port is closed");
+        }
+//                return null;
+//            }
+//        };
+//        task.setOnFailed(event -> setAlarmMessage("connect.device"));
+//        task.setOnSucceeded(event -> setAlarmMessage("null"));
+//        new Thread(task).start();
     }
 
     private static TextFormatter<?> limitString(int i) {
