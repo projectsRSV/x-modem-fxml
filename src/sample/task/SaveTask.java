@@ -27,7 +27,7 @@ public class SaveTask extends Task {
             for (int i = 0; i < fileList.size(); i++) {
                 updateProgress(i, fileList.size());
                 if (Xmodem.DEBUG) System.out.print("\n" + fileList.get(i));
-                if (Xmodem.DEBUG) System.out.print("\n" + commandList.get(i));
+//                if (Xmodem.DEBUG) System.out.print("\n" + commandList.get(i));
                 Xmodem.receiveFile(fileList.get(i), commandList.get(i));
             }
             updateProgress(fileList.size(), fileList.size());

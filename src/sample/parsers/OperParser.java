@@ -59,10 +59,10 @@ public class OperParser {
                     guiLists.getLongNameFieldList().get(i).setText("");
                     guiLists.getLongNameFieldList().get(i).setText(longNameList.get(i));
                 } catch (NullPointerException e) {
-                    System.out.println("\n******************************************");
-                    System.out.println("longNameList.size = " + longNameList.size());
-                    System.out.println("LongNmaeFieldList = " + guiLists.getLongNameFieldList());
-                    System.out.println("******************************************");
+                    System.out.print("\n******************************************");
+                    System.out.print("\nlongNameList.size = " + longNameList.size());
+                    System.out.print("\nLongNmaeFieldList = " + guiLists.getLongNameFieldList());
+                    System.out.print("\n******************************************");
                     throw new NullPointerException();
                 }
             }
@@ -77,10 +77,10 @@ public class OperParser {
                     guiLists.getMccNameFieldList().get(i).setText("");
                     guiLists.getMccNameFieldList().get(i).setText(mccList.get(i));
                 } catch (NullPointerException e) {
-                    System.out.println("\n******************************************");
-                    System.out.println("MccNameFieldList.size = " + mccList.size());
-                    System.out.println("mccList = " + guiLists.getMccNameFieldList());
-                    System.out.println("******************************************");
+                    System.out.print("\n******************************************");
+                    System.out.print("\nMccNameFieldList.size = " + mccList.size());
+                    System.out.print("\nmccList = " + guiLists.getMccNameFieldList());
+                    System.out.print("\n******************************************");
                     throw new NullPointerException();
                 }
             }

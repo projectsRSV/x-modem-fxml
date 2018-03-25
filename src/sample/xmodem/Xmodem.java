@@ -33,8 +33,8 @@ public class Xmodem {
 
     private static SerialPort serialPort;
     private static int countReceive;
-    private static boolean timePauseElapsed;
     private static Thread pauseThread;
+    volatile private static boolean timePauseElapsed = true;
 
     public static void setSerialPort(SerialPort serialPort) {
         Xmodem.serialPort = serialPort;
@@ -44,16 +44,6 @@ public class Xmodem {
         command += "\r\n";
         byte[] buffer = command.getBytes();
         writeData(buffer);
-    }
-
-    private static void setPauseThread(int seconds) {
-        pauseThread = new Thread(() -> {
-            try {
-                TimeUnit.SECONDS.sleep(seconds);
-            } catch (InterruptedException e) {
-            }
-            timePauseElapsed = true;
-        });
     }
 
     private static byte[] readFileXmodem() throws PortUnreachableException {
@@ -71,79 +61,58 @@ public class Xmodem {
     }
 
     public static void receiveFile(File file, String command) throws PortUnreachableException {
-        XmodemBlock xmodemBlock = new XmodemBlock();
         List<Byte> byteList;
         int buffSize;
-        int bytes;
+        XmodemBlock xmodemBlock;
 
         if (command.contains("ALL")) buffSize = 146;
         else buffSize = 111;
+
         do {
+            xmodemBlock = new XmodemBlock();
             byteList = new ArrayList<>();
-            sendCommand(command);
-            read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, buffSize);
-
-            timePauseElapsed = false;
-            setPauseThread(10);
-            pauseThread.start();
-            writeData(READY);
-
-            while (true) {
-                if (timePauseElapsed) {
-                    if (pauseThread.isAlive()) pauseThread.interrupt();
-                    if (DEBUG) {
-                        System.out.print("\nin ready block, when time is elapsed = " + serialPort.bytesAvailable());
-                    }
-                    setPauseThread(10);
-                    pauseThread.start();
-                    writeData(READY);
-                    timePauseElapsed = false;
-                }
-                if ((bytes = serialPort.bytesAvailable()) > 0) {
-                    System.out.print("\nbytes availible after ready = " + bytes);
-                    break;
-                }
-            }
-            if (pauseThread.isAlive()) pauseThread.interrupt();
-            timePauseElapsed = false;
+            beginTransaction(command, buffSize);
 
             while (true) {
                 xmodemBlock.setBlockData(readFileXmodem());
-                if (DEBUG) System.out.println("\n" + xmodemBlock.toString());
+                if (DEBUG) System.out.print("\n" + xmodemBlock.toString());
                 if (xmodemBlock.isEndOfTransmission()) {
-                    if (DEBUG) System.out.print("\nbefore send ACK EOT = " + serialPort.bytesAvailable());
                     pause(20);
-//                    writeData(ACK);
-//                    writeData(ACK);
                     writeData(ACK);
-                    if (DEBUG) System.out.println("\nsending ACK when EOT");
+                    if (DEBUG) System.out.print("\nEND of TRANSMISSION");
                     break;
-                } else if (xmodemBlock.getBlockNumber() != -1 && xmodemBlock.isCRCCorrect()) {
-                    int countAck = 0;
-                    if (DEBUG) System.out.print("\nbefore send ACK = " + serialPort.bytesAvailable());
-//                    pause(20);
-                    if (DEBUG) System.out.print("\nbefore send ACK pause= " + serialPort.bytesAvailable());
-                    do {
-                        writeData(ACK);    //send ack
-                        pause(2);
-                        if (countAck++ >= 25) break;
-                    } while (serialPort.bytesAvailable() == 0);
-                    if (DEBUG) System.out.println("\nsending ACK after receiving block");
-                    countReceive = 0;
+                } else if (xmodemBlock.isStartOfTransmission()) {
+                    if (xmodemBlock.getBlockNumber() != -1 && xmodemBlock.isCRCCorrect()) {
+                        int countAck = 0;
+                        do {
+                            writeData(ACK);
+                            pause(2);
+                            if (countAck++ >= 25) break;
+                        } while (serialPort.bytesAvailable() == 0);
+                        countReceive = 0;
+                    } else {
+                        if (DEBUG) System.out.print("\nerror block number or crc");
+                        int countNack = 0;
+                        do {
+                            writeData(NACK);
+                            pause(2);
+                            if (countNack++ >= 25) break;
+                        } while (serialPort.bytesAvailable() == 0);
+                    }
                 } else if (xmodemBlock.isEmpty()) {
-                    if (countReceive++ >= 3) {
-                        if (DEBUG) System.out.println("\nthrow RebootDeviceException");
+                    if (DEBUG) System.out.print("\nblock is empty");
+                    if (countReceive++ >= 5) {
+                        if (DEBUG) System.out.print("\nthrow RebootDeviceException");
                         countReceive = 0;
                         throw new RebootDeviceException();
                     }
-                    writeData(NACK);
+                    int countNack = 0;
+                    do {
+                        writeData(NACK);
+                        pause(2);
+                        if (countNack++ >= 25) break;
+                    } while (serialPort.bytesAvailable() == 0);
                     break;
-                } else if (xmodemBlock.getBlockNumber() == -1) {
-                    if (DEBUG) System.out.println("\nblock number incorrect");
-                    writeData(NACK);
-                } else if (!xmodemBlock.isCRCCorrect()) {
-                    if (DEBUG) System.out.println("\ncrc incorrect");
-                    writeData(NACK);
                 }
                 xmodemBlock.saveToList(byteList);
             }
@@ -160,12 +129,45 @@ public class Xmodem {
             }
         }
 
-        byte[] fileAsByte = new byte[newByteList.size()];
+        byte[] fileAsBytes = new byte[newByteList.size()];
         for (int i = 0; i < newByteList.size(); i++) {
-            fileAsByte[i] = newByteList.get(i);
+            fileAsBytes[i] = newByteList.get(i);
         }
 
-        writeToFile(fileAsByte, file);
+        writeToFile(fileAsBytes, file);
+    }
+
+    private static void beginTransaction(String command, int buffSize) throws PortUnreachableException {
+        int count = 0;
+        while (true) {
+            if (timePauseElapsed) {
+                if (count++ >= 1) throw new RebootDeviceException();
+                timePauseElapsed = false;
+                sendCommand(command);
+                read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, buffSize);
+                writeData(READY);
+                setPauseThread(3);
+            }
+            if (serialPort.bytesAvailable() > 0) {
+                System.out.print("\nbytes availible after ready = " + serialPort.bytesAvailable());
+                if (pauseThread.isAlive()) pauseThread.interrupt();
+                break;
+            }
+        }
+    }
+
+    private static void setPauseThread(int seconds) {
+        if (pauseThread != null && pauseThread.isAlive()) {
+            pauseThread.interrupt();
+            System.out.print("\nthread interrupted: " + pauseThread.isInterrupted() + " " + timePauseElapsed);
+        }
+        pauseThread = new Thread(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(seconds);
+            } catch (InterruptedException e) { }
+            timePauseElapsed = true;
+        });
+        pauseThread.start();
     }
 
     private static void writeToFile(byte[] bytes, File file) {

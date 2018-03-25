@@ -412,6 +412,8 @@ public class MainController {
             if (task.getException().toString().contains("ListIsEmptyException")) {
                 setAlarmMessage("name.long");
             } else if (task.getException().toString().contains("RebootDeviceException")) {
+                connectButton.setSelected(false);
+                connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
                 setAlarmMessage("reboot.device");
             } else setAlarmMessage("connect.device");
             progressStage.close();

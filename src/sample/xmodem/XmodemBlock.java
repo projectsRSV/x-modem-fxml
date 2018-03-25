@@ -8,6 +8,7 @@ public class XmodemBlock {
     /*size of block == 132 bytes*/
     private byte[] blockData;
     private byte[] mainData;
+    private byte packetNum = 1;
 
     public void setBlockData(byte[] blockData) {
         this.blockData = blockData;
@@ -27,12 +28,14 @@ public class XmodemBlock {
         return (sum == 0);
     }
 
-    public int getHeader() {
-        return blockData[0];
+    public boolean isStartOfTransmission() {
+        return blockData[0] == Xmodem.SOH;
     }
+
     public int getBlockNumber() {
         int sum = (blockData[1] + blockData[2] & 0xff);
-        return (sum == 0xff) ? blockData[1] : -1;
+        return (blockData[1] == packetNum++ && sum == 0xff) ? blockData[1] : -1;
+//        return (sum == 0xff) ? blockData[1] : -1;
     }
 
     public boolean isCRCCorrect() {
@@ -56,6 +59,6 @@ public class XmodemBlock {
 
     @Override
     public String toString() {
-        return Arrays.toString(blockData);
+        return "receive: " + Arrays.toString(blockData);
     }
 }

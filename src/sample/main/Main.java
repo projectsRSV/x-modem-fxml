@@ -21,8 +21,8 @@ public class Main extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/GUI.css").toExternalForm());
         primaryStage.setScene(scene);
         setUserAgentStylesheet(STYLESHEET_CASPIAN);
-        if (Xmodem.DEBUG) primaryStage.setX(1370);
-//        if (Xmodem.DEBUG) primaryStage.setX(770);
+//        if (Xmodem.DEBUG) primaryStage.setX(1370);
+        if (Xmodem.DEBUG) primaryStage.setX(770);
         primaryStage.setResizable(false);
         primaryStage.show();
     }
