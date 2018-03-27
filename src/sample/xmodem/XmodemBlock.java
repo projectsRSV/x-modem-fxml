@@ -22,9 +22,7 @@ public class XmodemBlock {
 
     public boolean isEmpty() {
         int sum = 0;
-        for (byte b : blockData) {
-            sum |= b;
-        }
+        for (byte b : blockData) sum |= b;
         return (sum == 0);
     }
 
@@ -32,10 +30,14 @@ public class XmodemBlock {
         return blockData[0] == Xmodem.SOH;
     }
 
-    public int getBlockNumber() {
-        int sum = (blockData[1] + blockData[2] & 0xff);
-        return (blockData[1] == packetNum++ && sum == 0xff) ? blockData[1] : -1;
-//        return (sum == 0xff) ? blockData[1] : -1;
+    public boolean isBlockNumCorrect() {
+        byte sum1 = blockData[1];
+        byte sum2 = blockData[2];
+        byte sum = (byte) (sum1 + sum2);
+//        return (blockData[1] == packetNum++ && sum == 0xff) ? blockData[1] : -1;
+//        return (blockData[1] == packetNum++ && sum == 0xff);
+        return (sum == -1);
+//        return true;
     }
 
     public boolean isCRCCorrect() {

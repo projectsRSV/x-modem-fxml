@@ -27,8 +27,7 @@
             <menus>
                 <Menu fx:id="saveMenu" mnemonicParsing="false" text="Save">
                     <items>
-                        <MenuItem fx:id="saveTxt" mnemonicParsing="false" text="txt" />
-                        <MenuItem fx:id="saveZip" mnemonicParsing="false" text="zip" />
+                        <MenuItem fx:id="saveTxt" mnemonicParsing="false" onAction="#saveFile" text="txt" />
                     </items>
                 </Menu>
                 <Menu fx:id="optionMenu" mnemonicParsing="false" text="option">

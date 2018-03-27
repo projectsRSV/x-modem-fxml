@@ -56,7 +56,7 @@ public class OperParser {
         try {
             for (int i = 0; i < longNameList.size(); i++) {
                 try {
-                    guiLists.getLongNameFieldList().get(i).setText("");
+//                    guiLists.getLongNameFieldList().get(i).setText("");
                     guiLists.getLongNameFieldList().get(i).setText(longNameList.get(i));
                 } catch (NullPointerException e) {
                     System.out.print("\n******************************************");
@@ -69,12 +69,12 @@ public class OperParser {
             for (int i = 0; i < shortNameList.size(); i++) {
                 shortNameList.get(i);
                 guiLists.getShortNameFieldList().get(i);
-                guiLists.getShortNameFieldList().get(i).setText("");
+//                guiLists.getShortNameFieldList().get(i).setText("");
                 guiLists.getShortNameFieldList().get(i).setText(shortNameList.get(i));
             }
             for (int i = 0; i < mccList.size(); i++) {
                 try {
-                    guiLists.getMccNameFieldList().get(i).setText("");
+//                    guiLists.getMccNameFieldList().get(i).setText("");
                     guiLists.getMccNameFieldList().get(i).setText(mccList.get(i));
                 } catch (NullPointerException e) {
                     System.out.print("\n******************************************");

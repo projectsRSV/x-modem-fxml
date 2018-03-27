@@ -29,6 +29,8 @@ import sample.xmodem.Xmodem;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class MainController {
@@ -110,8 +112,8 @@ public class MainController {
     private Menu saveMenu;
     @FXML
     private MenuItem saveTxt;
-    @FXML
-    private MenuItem saveZip;
+//    @FXML
+//    private MenuItem saveZip;
     @FXML
     private Menu optionMenu;
     @FXML
@@ -370,7 +372,6 @@ public class MainController {
             }
         };
         createProgressBar(task);
-        new Thread(task).start();
     }
 
     @FXML
@@ -394,16 +395,18 @@ public class MainController {
             }
         };
         createProgressBar(task);
-        new Thread(task).start();
     }
 
     private void createProgressBar(Task task) {
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        service.submit(task);
+
         FXMLLoader loader = new FXMLLoader(getClass().getResource("progressBar.fxml"));
         Stage progressStage = new Stage();
         Stage priStage = (Stage) readButton.getScene().getWindow();
-        progressStage.setX(priStage.getX() + 125);
+        progressStage.setX(priStage.getX() + 15);
         progressStage.setY(priStage.getY() + 100);
-        progressStage.setOnCloseRequest(event -> task.cancel());
+        progressStage.setOnCloseRequest(event -> service.shutdownNow());
         task.setOnSucceeded(event1 -> {
             setAlarmMessage("null");
             progressStage.close();
@@ -415,7 +418,12 @@ public class MainController {
                 connectButton.setSelected(false);
                 connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
                 setAlarmMessage("reboot.device");
-            } else setAlarmMessage("connect.device");
+            } else if (task.getException().toString().contains("NullPointerException")) {
+                setAlarmMessage("null");
+            } else {
+                if (Xmodem.DEBUG) task.getException().printStackTrace();
+                setAlarmMessage("connect.device");
+            }
             progressStage.close();
         });
 
@@ -429,18 +437,19 @@ public class MainController {
         }
         ProgressController progressController = loader.getController();
         progressController.setTask(task);
-        Scene scene = new Scene(parent, 270, 17);
+        Scene scene = new Scene(parent, 270, 10);
         scene.getStylesheets().add("/css/GUI.css");
         progressStage.initModality(Modality.APPLICATION_MODAL);
         progressStage.setScene(scene);
         progressStage.show();
     }
 
-    private void saveFile(String text) {
-        if (Xmodem.DEBUG) System.out.println("save");
+    @FXML
+    public void saveFile(Event event) {
+        if (Xmodem.DEBUG) System.out.print("\nsave");
         FileChooser fileChooser = new FileChooser();
         fileChooser.titleProperty().bind(I18N.createStringBinding("save.title"));
-        if (text.endsWith(".txt")) fileChooser.getExtensionFilters().add(
+        if (((MenuItem) event.getSource()).getText().endsWith(".txt")) fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter(I18N.get("type.files.txt"), "*.txt"));
         else fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter(I18N.get("type.files.zip"), "*.zip"));
@@ -448,7 +457,6 @@ public class MainController {
         if (file != null) {
             SaveTask saveTask = new SaveTask(file);
             createProgressBar(saveTask);
-            new Thread(saveTask).start();
         }
     }
 
@@ -456,23 +464,13 @@ public class MainController {
         saveMenu.getStyleClass().add("menu-my");
         saveMenu.textProperty().bind(I18N.createStringBinding("menu.title"));
         saveTxt.textProperty().bind(I18N.createStringBinding("menu.save.txt"));
-        saveTxt.setOnAction(event -> {
-            saveFile(saveTxt.getText());
-        });
-        saveZip.textProperty().bind(I18N.createStringBinding("menu.save.zip"));
-        saveZip.setOnAction(event -> {
-            saveFile(saveZip.getText());
-        });
+//        saveZip.textProperty().bind(I18N.createStringBinding("menu.save.zip"));
         optionMenu.textProperty().bind(I18N.createStringBinding("menu.option"));
         languageMenu.textProperty().bind(I18N.createStringBinding("menu.lang"));
         engItemMenu.textProperty().bind(I18N.createStringBinding("menu.item.eng"));
-        engItemMenu.setOnAction(event -> {
-            I18N.setLocale(I18N.getSupportedLocales().get(0));
-        });
+        engItemMenu.setOnAction(event -> I18N.setLocale(I18N.getSupportedLocales().get(0)));
         rusItemMenu.textProperty().bind(I18N.createStringBinding("menu.item.rus"));
-        rusItemMenu.setOnAction(event -> {
-            I18N.setLocale(I18N.getSupportedLocales().get(1));
-        });
+        rusItemMenu.setOnAction(event -> I18N.setLocale(I18N.getSupportedLocales().get(1)));
         if (Locale.getDefault().toString().equals("ru_RU")) rusItemMenu.setSelected(true);
         else engItemMenu.setSelected(true);
         timeSynchMenuItem.textProperty().bind(I18N.createStringBinding("menu.timeSynch"));
@@ -483,9 +481,6 @@ public class MainController {
     }
 
     private void scanAndConnectToDevice() {
-//        Task task = new Task() {
-//            @Override
-//            protected Object call() throws Exception {
         uart = new Uart();
         comboBox.setItems(uart.getPortListString());
         Callback cellFactory = new Callback<ListView<SerialPort>, ListCell<SerialPort>>() {
@@ -507,17 +502,10 @@ public class MainController {
         comboBox.valueProperty().addListener((observable, oldValue, newValue) -> uart.setPort((SerialPort) newValue));
         comboBox.setCellFactory(cellFactory);
         comboBox.setButtonCell((ListCell) cellFactory.call(null));
-//                return null;
-//            }
-//        };
-//        new Thread(task).start();
     }
 
     @FXML
     public void connectBtnHandler() {
-//        Task task = new Task() {
-//            @Override
-//            protected Object call() throws Exception {
         if (connectButton.isSelected()) {
             try {
                 uart.openPortDevice();
@@ -539,12 +527,6 @@ public class MainController {
             connectButton.setSelected(false);
             if (Xmodem.DEBUG) System.out.println("port is closed");
         }
-//                return null;
-//            }
-//        };
-//        task.setOnFailed(event -> setAlarmMessage("connect.device"));
-//        task.setOnSucceeded(event -> setAlarmMessage("null"));
-//        new Thread(task).start();
     }
 
     private static TextFormatter<?> limitString(int i) {

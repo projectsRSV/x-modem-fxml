@@ -3,9 +3,8 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.Pane?>
 
-
 <Pane xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.main.ProgressController">
    <children>
-      <ProgressBar fx:id="progressBar" prefHeight="27.0" prefWidth="300.0" progress="0.0" />
+      <ProgressBar fx:id="progressBar" prefHeight="25.0" prefWidth="300.0" progress="0.0" />
    </children>
 </Pane>

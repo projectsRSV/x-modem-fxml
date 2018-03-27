@@ -17,7 +17,8 @@ public class Uart {
 
     public Uart() {
         for (SerialPort port : SerialPort.getCommPorts()) {
-//            if (port.getDescriptivePortName().matches(".*AT Port.*"))
+            if (port.getDescriptivePortName().matches(".*AT Port 9000.*") ||
+                    port.getDescriptivePortName().matches(".*Modem 9000.*"))
                 portListString.add(port);
         }
         if (Xmodem.DEBUG) System.out.println("end of searching uart ports");
