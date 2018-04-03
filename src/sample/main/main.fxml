@@ -43,7 +43,7 @@
                             </items>
                         </Menu>
                         <CheckMenuItem fx:id="timeSynchMenuItem" mnemonicParsing="false" selected="true" text="Time synchro" />
-                  <MenuItem fx:id="scanningMenuItem" mnemonicParsing="false" text="Unspecified Action" />
+                  <MenuItem fx:id="scanningMenuItem" mnemonicParsing="false" onAction="#scanAndConnectToDevice" text="Unspecified Action" />
                     </items>
                 </Menu>
             </menus>

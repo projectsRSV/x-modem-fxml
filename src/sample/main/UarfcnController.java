@@ -8,19 +8,24 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import sample.utils.I18N;
-import sample.xmodem.Xmodem;
 import sample.command.CommandUarfcn;
+import sample.utils.I18N;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UarfcnController {
+    private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+
     private static final int START_900 = 2937;
     private static final int END_900 = 3088;
     private static final int START_2100 = 10562;
     private static final int END_2100 = 10838;
+
     private CommandUarfcn operForm;
     @FXML
     private Label notificationLabel;
@@ -37,7 +42,7 @@ public class UarfcnController {
     List<TextField> textFieldList;
 
     @FXML
-    public void initialize() {
+    private void initialize() {
         saveButton.textProperty().bind(I18N.createStringBinding("button.write"));
         textFieldList = new ArrayList<>(Arrays.asList(uarfcnField1, uarfcnField2, uarfcnField3, uarfcnField4));
         notificationLabel.getStyleClass().add("label-notif-uarfcn");
@@ -62,7 +67,7 @@ public class UarfcnController {
                     operForm.getUarfcnList().add(textFieldList.get(i).getText());
                 }
             }
-            if (Xmodem.DEBUG) System.out.println(operForm);
+            LOGGER.info(operForm.toString());
             ((Stage) saveButton.getScene().getWindow()).close();
         });
     }
@@ -88,7 +93,7 @@ public class UarfcnController {
                 textFieldList.get(i).setText(operForm.getUarfcnList().get(i));
             }
         } catch (NullPointerException e) {
-            if (Xmodem.DEBUG) System.out.println("nullPointerException");
+            LOGGER.log(Level.WARNING, "operForm is empty", e);
         }
     }
 }

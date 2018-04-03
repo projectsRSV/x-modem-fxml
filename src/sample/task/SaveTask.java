@@ -5,16 +5,18 @@ import javafx.concurrent.Task;
 import sample.xmodem.Xmodem;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.net.PortUnreachableException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public class SaveTask extends Task {
+    private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+
     public final static String COMMAND_SAVE_TXT = "AT+DOWN_LOGS=";
     public final static String COMMAND_SAVE_ZIP = "AT+DOWN_LOGS=ALL";
     private File file;
-//    private static int fileNameInd;
 
     public SaveTask(File file) {
         this.file = file;
@@ -22,24 +24,15 @@ public class SaveTask extends Task {
 
     @Override
     protected Object call() throws PortUnreachableException {
-        try {
-//            while (true) {
-            List<File> fileList = createFiles(file);
-            List<String> commandList = createCommands(file);
+        List<File> fileList = createFiles(file);
+        List<String> commandList = createCommands(file);
 
-            for (int i = 0; i < fileList.size(); i++) {
-                updateProgress(i, fileList.size());
-                if (Xmodem.DEBUG) System.out.print("\n" + fileList.get(i));
-                Xmodem.receiveFile(fileList.get(i), commandList.get(i));
-            }
-            updateProgress(fileList.size(), fileList.size());
-            TimeUnit.MILLISECONDS.sleep(300);
-
-//                fileNameInd++;
-//            }
-        } catch (InterruptedException e) {
-            if (Xmodem.DEBUG) e.printStackTrace();
+        for (int i = 0; i < fileList.size(); i++) {
+            updateProgress(i, fileList.size());
+            LOGGER.info("save to file: " + fileList.get(i).toString());
+            Xmodem.receiveFile(fileList.get(i), commandList.get(i));
         }
+        updateProgress(fileList.size(), fileList.size());
         return null;
     }
 
@@ -66,5 +59,4 @@ public class SaveTask extends Task {
         }
         return fileList;
     }
-
 }

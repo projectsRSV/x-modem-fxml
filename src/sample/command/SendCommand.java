@@ -3,12 +3,15 @@ package sample.command;
 
 import sample.xmodem.Xmodem;
 
+import java.lang.invoke.MethodHandles;
 import java.net.PortUnreachableException;
+import java.util.logging.Logger;
 
 public class SendCommand {
+    private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
 
     public static void send(MakeCommandInt makeCommandInt) throws PortUnreachableException {
-//        Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 5120);
+        LOGGER.info("send command: " + makeCommandInt.getCommand());
         Xmodem.sendCommand(makeCommandInt.getCommand());
     }
 }

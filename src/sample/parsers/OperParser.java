@@ -1,14 +1,19 @@
 package sample.parsers;
 
 
+import javafx.application.Platform;
 import javafx.scene.control.SpinnerValueFactory;
 import sample.main.OperGUIList;
-import sample.xmodem.Xmodem;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class OperParser {
+    private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+
     private OperGUIList guiLists;
 
     public OperParser(OperGUIList guiLists) {
@@ -26,9 +31,9 @@ public class OperParser {
             if (!"".equals(s))
                 list.add(s);
         }
-        for (String s : list) {
-            if (Xmodem.DEBUG) System.out.println(s);
-        }
+//        for (String s : list) {
+//            if (Xmodem.DEBUG) System.out.println(s);
+//        }
         List<String> longNameList = new ArrayList<>();
         List<String> shortNameList = new ArrayList<>();
         List<String> mccList = new ArrayList<>();
@@ -54,51 +59,30 @@ public class OperParser {
             }
         }
         try {
-            for (int i = 0; i < longNameList.size(); i++) {
-                try {
-//                    guiLists.getLongNameFieldList().get(i).setText("");
+            Platform.runLater(() -> {
+                for (int i = 0; i < longNameList.size(); i++) {
                     guiLists.getLongNameFieldList().get(i).setText(longNameList.get(i));
-                } catch (NullPointerException e) {
-                    System.out.print("\n******************************************");
-                    System.out.print("\nlongNameList.size = " + longNameList.size());
-                    System.out.print("\nLongNmaeFieldList = " + guiLists.getLongNameFieldList());
-                    System.out.print("\n******************************************");
-                    throw new NullPointerException();
                 }
-            }
-            for (int i = 0; i < shortNameList.size(); i++) {
-                shortNameList.get(i);
-                guiLists.getShortNameFieldList().get(i);
-//                guiLists.getShortNameFieldList().get(i).setText("");
-                guiLists.getShortNameFieldList().get(i).setText(shortNameList.get(i));
-            }
-            for (int i = 0; i < mccList.size(); i++) {
-                try {
-//                    guiLists.getMccNameFieldList().get(i).setText("");
+                for (int i = 0; i < shortNameList.size(); i++) {
+                    guiLists.getShortNameFieldList().get(i).setText(shortNameList.get(i));
+                }
+                for (int i = 0; i < mccList.size(); i++) {
                     guiLists.getMccNameFieldList().get(i).setText(mccList.get(i));
-                } catch (NullPointerException e) {
-                    System.out.print("\n******************************************");
-                    System.out.print("\nMccNameFieldList.size = " + mccList.size());
-                    System.out.print("\nmccList = " + guiLists.getMccNameFieldList());
-                    System.out.print("\n******************************************");
-                    throw new NullPointerException();
                 }
-            }
-            for (int i = 0; i < mncList.size(); i++) {
-//                guiLists.getSpinnerList().get(i).getValueFactory().setValue(Integer.valueOf(mncList.get(i)));
-                SpinnerValueFactory<Integer> valueFactory =
-                        new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99,
-                                Integer.valueOf(mncList.get(i)));
-                guiLists.getSpinnerList().get(i).setValueFactory(valueFactory);
-            }
-            for (int i = 0; i < gsmList.size(); i++) {
-                guiLists.getGsmCheckBoxList().get(i).setSelected((gsmList.get(i).equals("1")) ? true : false);
-            }
-            for (int i = 0; i < wcdmaList.size(); i++) {
-                guiLists.getWcdmaCheckBoxList().get(i).setSelected((wcdmaList.get(i).equals("1")) ? true : false);
-            }
+                for (int i = 0; i < mncList.size(); i++) {
+                    SpinnerValueFactory<Integer> valueFactory =
+                            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, Integer.valueOf(mncList.get(i)));
+                    guiLists.getSpinnerList().get(i).setValueFactory(valueFactory);
+                }
+                for (int i = 0; i < gsmList.size(); i++) {
+                    guiLists.getGsmCheckBoxList().get(i).setSelected((gsmList.get(i).equals("1")) ? true : false);
+                }
+                for (int i = 0; i < wcdmaList.size(); i++) {
+                    guiLists.getWcdmaCheckBoxList().get(i).setSelected((wcdmaList.get(i).equals("1")) ? true : false);
+                }
+            });
         } catch (NullPointerException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "error while parsing main oper data", e);
         }
     }
 

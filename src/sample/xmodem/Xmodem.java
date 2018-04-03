@@ -5,6 +5,7 @@ import sample.exceptions.RebootDeviceException;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.PortUnreachableException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,11 +13,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+import java.util.logging.Logger;
 
 public class Xmodem {
-
-        public final static boolean DEBUG = false;
+    private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+    //        public final static boolean DEBUG = false;
 //    public final static boolean DEBUG = true;
 
     final static byte SOH = 1;
@@ -26,8 +27,8 @@ public class Xmodem {
     final static byte ACK = 6;
     final static byte NACK = 0x15;
     final static byte SUB = 26;
-    final static byte[] READY = {0x43, 0x00, 0x2e};     //C
-    //    final static byte READY = 0x43;     //C
+    //    final static byte[] READY = {0x43, 0x00, 0x2e};     //C
+    final static byte READY = 0x43;     //C
     final static int NUM_BYTES = 134;
 
     private static SerialPort serialPort;
@@ -42,7 +43,6 @@ public class Xmodem {
 
     public static void sendCommand(String command) throws PortUnreachableException {
         command += "\r\n";
-        if (DEBUG) System.out.print("\n" + command);
         byte[] buffer = command.getBytes();
         writeData(buffer);
     }
@@ -66,12 +66,14 @@ public class Xmodem {
         int buffSize;
         XmodemBlock xmodemBlock;
 
+        LOGGER.info("starting Xmodem receiving");
+
         if (command.contains("ALL")) buffSize = 146;
         else buffSize = 111;
 
         do {
             if (countBreaks >= 5) {
-                if (DEBUG) System.out.print("\nthrow NullPointerException");
+                LOGGER.warning("throw NullPointerException");
                 countBreaks = 0;
                 countEmptyBlock = 0;
                 throw new NullPointerException();
@@ -87,11 +89,10 @@ public class Xmodem {
                     countEmptyBlock = 0;
                     pause(20);
                     writeData(ACK);
-                    if (DEBUG) System.out.print("\nEND of TRANSMISSION");
+                    LOGGER.info("END of TRANSMISSION");
                     break;
                 } else if (xmodemBlock.isStartOfTransmission()) {
                     if (xmodemBlock.isBlockNumCorrect() && xmodemBlock.isCRCCorrect()) {
-//                        if (DEBUG) System.out.print("\n" + xmodemBlock.toString());
                         int countAck = 0;
                         do {
                             writeData(ACK);
@@ -102,13 +103,13 @@ public class Xmodem {
                             }
                         } while (serialPort.bytesAvailable() == 0);
                     } else {
-                        if (DEBUG) System.out.print("\nerror block number or crc");
+                        LOGGER.warning("error block number or crc");
                         writeData(NACK);
                     }
                 } else if (xmodemBlock.isEmpty()) {
-                    if (DEBUG) System.out.print("\nblock is empty");
+                    LOGGER.warning("block is empty");
                     if (countEmptyBlock++ >= 5) {
-                        if (DEBUG) System.out.print("\nthrow RebootDeviceException");
+                        LOGGER.warning("throw RebootDeviceException");
                         countEmptyBlock = 0;
                         countBreaks = 0;
                         throw new RebootDeviceException();
@@ -148,10 +149,10 @@ public class Xmodem {
                 sendCommand(command);
                 read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, buffSize);
                 writeData(READY);
-                setPauseThread(5);
+                setPauseThread(3);
             }
             if (serialPort.bytesAvailable() > 0) {
-                System.out.print("\nbytes availible after ready = " + serialPort.bytesAvailable());
+                LOGGER.info("bytes availible after ready = " + serialPort.bytesAvailable());
                 pauserThread.interrupt();
                 break;
             }
@@ -184,24 +185,14 @@ public class Xmodem {
         byte[] readBuffer = new byte[sizeBuffer];
         try {
             int numRead = serialPort.readBytes(readBuffer, readBuffer.length);
-            if (Xmodem.DEBUG) {
-                System.out.println("\nRead " + numRead + " bytes: ");
-                for (int i = 0; i < readBuffer.length; i++) {
-                    System.out.print(readBuffer[i]);
-                }
-            }
+            LOGGER.info("Read " + numRead + " bytes: " + new String(readBuffer).replaceAll("\\s", ","));
         } catch (Exception e) { e.printStackTrace(); }
         return readBuffer;
     }
 
     private static void writeData(byte... bufFrom) throws PortUnreachableException {
         serialPort.writeBytes(bufFrom, bufFrom.length);
-        /*if (DEBUG) {
-            System.out.print("\nsending: ");
-            for (int i = 0; i < bufFrom.length; i++) {
-                System.out.print((char) bufFrom[i]);
-            }
-        }*/
+        if (bufFrom[0] == READY) LOGGER.info("send READY");
     }
 
     private static void pause(int pause) {

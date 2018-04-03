@@ -1,15 +1,17 @@
 package sample.parsers;
 
 
-import sample.xmodem.Xmodem;
 import sample.command.CommandUarfcn;
 import sample.command.MakeCommandInt;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class UarfcnParser {
+    private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+
     private List<MakeCommandInt> listUarfcn;
 
     public UarfcnParser(List<MakeCommandInt> listUarfcn) {
@@ -45,7 +47,7 @@ public class UarfcnParser {
                     commandUarfcn.getUarfcnList().add(String.valueOf(list.get(i)));
                 }
             }
-            if (Xmodem.DEBUG) System.out.println(Arrays.asList(list));
+            LOGGER.info("parse UARFCN " + list.toString());
         }
     }
 }

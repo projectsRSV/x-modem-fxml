@@ -38,8 +38,7 @@ public class CsControl extends ResourceBundle.Control {
     }
 
     @Override
-    public ResourceBundle newBundle(String baseName, Locale locale,
-                                    String format, ClassLoader loader, boolean reload)
+    public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
             throws IllegalAccessException, InstantiationException, IOException {
 
         String bundleName = toBundleName(baseName, locale);
@@ -48,10 +47,8 @@ public class CsControl extends ResourceBundle.Control {
             try {
                 @SuppressWarnings("unchecked")
                 Class<? extends ResourceBundle> bundleClass
-                        = (Class<? extends ResourceBundle>)loader.loadClass(bundleName);
+                        = (Class<? extends ResourceBundle>) loader.loadClass(bundleName);
 
-                // If the class isn't a ResourceBundle subclass, throw a
-                // ClassCastException.
                 if (ResourceBundle.class.isAssignableFrom(bundleClass)) {
                     bundle = bundleClass.newInstance();
                 } else {
@@ -67,25 +64,23 @@ public class CsControl extends ResourceBundle.Control {
             InputStream stream = null;
             try {
                 stream = AccessController.doPrivileged(
-                        new PrivilegedExceptionAction<InputStream>() {
-                            public InputStream run() throws IOException {
-                                InputStream is = null;
-                                if (reloadFlag) {
-                                    URL url = classLoader.getResource(resourceName);
-                                    if (url != null) {
-                                        URLConnection connection = url.openConnection();
-                                        if (connection != null) {
-                                            // Disable caches to get fresh data for
-                                            // reloading.
-                                            connection.setUseCaches(false);
-                                            is = connection.getInputStream();
-                                        }
+                        (PrivilegedExceptionAction<InputStream>) () -> {
+                            InputStream is = null;
+                            if (reloadFlag) {
+                                URL url = classLoader.getResource(resourceName);
+                                if (url != null) {
+                                    URLConnection connection = url.openConnection();
+                                    if (connection != null) {
+                                        // Disable caches to get fresh data for
+                                        // reloading.
+                                        connection.setUseCaches(false);
+                                        is = connection.getInputStream();
                                     }
-                                } else {
-                                    is = classLoader.getResourceAsStream(resourceName);
                                 }
-                                return is;
+                            } else {
+                                is = classLoader.getResourceAsStream(resourceName);
                             }
+                            return is;
                         });
             } catch (PrivilegedActionException e) {
                 throw (IOException) e.getException();

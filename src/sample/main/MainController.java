@@ -28,12 +28,17 @@ import sample.xmodem.Xmodem;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MainController {
+    private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+
     @FXML
     private Label operatorLabel1;
     @FXML
@@ -112,7 +117,7 @@ public class MainController {
     private Menu saveMenu;
     @FXML
     private MenuItem saveTxt;
-//    @FXML
+    //    @FXML
 //    private MenuItem saveZip;
     @FXML
     private Menu optionMenu;
@@ -128,17 +133,12 @@ public class MainController {
     private MenuItem scanningMenuItem;
 
     private OperGUIList guiLists;
-    private List<MakeCommandInt> listUarfcn = new ArrayList<>(Arrays.asList(new CommandUarfcn(),
-            new CommandUarfcn(), new CommandUarfcn(), new CommandUarfcn()));
-    //    private List<MakeCommandInt> listUarfcn = new ArrayList<>(Arrays.asList(
-//            new CommandUarfcn(new ArrayList<>(Arrays.asList("10562", "10563", "10564", "10565"))),
-//            new CommandUarfcn(new ArrayList<>(Arrays.asList("10566", "10567", "10568", "10569"))),
-//            new CommandUarfcn(new ArrayList<>(Arrays.asList("10570", "10571", "10572", "10573"))),
-//            new CommandUarfcn(new ArrayList<>(Arrays.asList("10574", "10575", "10576", "10577")))));
+    private List<MakeCommandInt> listUarfcn = Arrays.asList(new CommandUarfcn(),
+            new CommandUarfcn(), new CommandUarfcn(), new CommandUarfcn());
     private Uart uart;
 
     @FXML
-    public void initialize() {
+    private void initialize() {
         guiLists = new OperGUIList();
         guiLists.setLongNameFieldList(Arrays.asList(longNameOp1, longNameOp2, longNameOp3, longNameOp4));
         guiLists.setShortNameFieldList(Arrays.asList(shortNameOp1, shortNameOp2, shortNameOp3, shortNameOp4));
@@ -153,7 +153,7 @@ public class MainController {
     }
 
     @FXML
-    public void makeLabelActive(MouseEvent event) {
+    private void makeLabelActive(MouseEvent event) {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("uarfcn.fxml"));
         Stage uarfcnStage = new Stage();
         uarfcnStage.getIcons().add(new Image("/css/antenna.png"));
@@ -179,14 +179,14 @@ public class MainController {
     }
 
     @FXML
-    public void scaleHandlerOn(Event event) {
+    private void scaleHandlerOn(Event event) {
         Label label = (Label) event.getSource();
         label.setScaleX(1.2);
         label.setScaleY(1.3);
     }
 
     @FXML
-    public void scaleHandlerOff(Event event) {
+    private void scaleHandlerOff(Event event) {
         Label label = (Label) event.getSource();
         label.setScaleX(1.0);
         label.setScaleY(1.0);
@@ -195,7 +195,6 @@ public class MainController {
     private void createMainField() {
         connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
         scanningMenuItem.textProperty().bind(I18N.createStringBinding("menu.scan"));
-        scanningMenuItem.setOnAction(event -> scanAndConnectToDevice());
         readButton.textProperty().bind(I18N.createStringBinding("button.read"));
         readButton.setOnMouseEntered(event -> readButton.setEffect(new Lighting()));
         readButton.setOnMouseExited(event -> readButton.setEffect(null));
@@ -271,7 +270,7 @@ public class MainController {
     }
 
     @FXML
-    public void writeButtonHandler() {
+    private void writeButtonHandler() {
         Task task = new Task() {
             @Override
             protected Object call() throws Exception {
@@ -325,46 +324,48 @@ public class MainController {
                 }
                 updateProgress(1, max);
                 List<MakeCommandInt> operList = new ArrayList<>();
-                List<MakeCommandInt> uarfcnList = new ArrayList<>();
+                List<MakeCommandInt> listUarfcnValid = new ArrayList<>();
                 for (MakeCommandInt o : listMain) {
                     if (o.isValid()) operList.add(o);
                     else throw new ListIsEmptyException();
                 }
                 for (MakeCommandInt o : listUarfcn) {
-                    if (o.isValid()) uarfcnList.add(o);
+                    if (o.isValid()) listUarfcnValid.add(o);
                 }
                 if (!uart.getPort().isOpen()) throw new NullPointerException();
 
                 Set<String> acknowledgeSet = new HashSet<>();
-                OperSetParser operSetHandler = new OperSetParser(acknowledgeSet);
+                OperSetParser operSetParser = new OperSetParser(acknowledgeSet);
                 for (MakeCommandInt m : operList) {
                     do {
                         SendCommand.send(m);
-                        operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, 285));
+                        operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, 285));
                     } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("--- SET OPERATOR ---"));
                 }
                 updateProgress(3, max);
                 do {
                     SendCommand.send(Commands.DEL_FREQ);
-                    operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 27));
+                    operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 27));
                 } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("3G base file removed."));
                 updateProgress(5, max);
-                for (MakeCommandInt m : uarfcnList) {
-                    do {
-                        SendCommand.send(m);
-                        operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 21));
-                    } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Adding to Base!"));
+                for (MakeCommandInt m : listUarfcn) {
+                    if (!m.getCommand().equals("")) {
+                        do {
+                            SendCommand.send(m);
+                            operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 21));
+                        } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Adding to Base!"));
+                    }
                 }
                 updateProgress(7, max);
                 do {
                     SendCommand.send(Commands.REFRESH);
-                    operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 4));
+                    operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 4));
                 } while (!acknowledgeSet.contains("OK"));
                 updateProgress(9, max);
 
                 if (timeSynchMenuItem.isSelected()) {
                     SendCommand.send(Commands.SET_CLOCK);
-                    operSetHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 6));
+                    operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 6));
                 }
                 updateProgress(max, max);
                 TimeUnit.MILLISECONDS.sleep(300);
@@ -375,7 +376,7 @@ public class MainController {
     }
 
     @FXML
-    public void readButtonHandler() {
+    private void readButtonHandler() {
         Task task = new Task() {
             @Override
             protected Object call() throws Exception {
@@ -383,14 +384,14 @@ public class MainController {
                 Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, uart.getPort().bytesAvailable());
                 SendCommand.send(Commands.READ_FREQ);
                 updateProgress(1, 5);
-                UarfcnParser uarfcnHandler = new UarfcnParser(listUarfcn);
-                uarfcnHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 237));
+                UarfcnParser uarfcnParser = new UarfcnParser(listUarfcn);
+                uarfcnParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 237));
                 SendCommand.send(Commands.READ_MAIN);
                 updateProgress(3, 5);
-                OperParser operHandler = new OperParser(guiLists);
-                operHandler.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 261));
+                OperParser operParser = new OperParser(guiLists);
+                operParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 261));
                 updateProgress(5, 5);
-                TimeUnit.MILLISECONDS.sleep(300);
+//                TimeUnit.MILLISECONDS.sleep(300);
                 return null;
             }
         };
@@ -421,7 +422,7 @@ public class MainController {
             } else if (task.getException().toString().contains("NullPointerException")) {
                 setAlarmMessage("null");
             } else {
-                if (Xmodem.DEBUG) task.getException().printStackTrace();
+                LOGGER.log(Level.SEVERE, "return exception from task", task.getException());
                 setAlarmMessage("connect.device");
             }
             progressStage.close();
@@ -445,8 +446,7 @@ public class MainController {
     }
 
     @FXML
-    public void saveFile(Event event) {
-        if (Xmodem.DEBUG) System.out.print("\nsave");
+    private void saveFile(Event event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.titleProperty().bind(I18N.createStringBinding("save.title"));
         if (((MenuItem) event.getSource()).getText().endsWith(".txt")) fileChooser.getExtensionFilters().add(
@@ -480,6 +480,7 @@ public class MainController {
         notification.textProperty().bind(I18N.createStringBinding(string));
     }
 
+    @FXML
     private void scanAndConnectToDevice() {
         uart = new Uart();
         comboBox.setItems(uart.getPortListString());
@@ -505,7 +506,7 @@ public class MainController {
     }
 
     @FXML
-    public void connectBtnHandler() {
+    private void connectBtnHandler() {
         if (connectButton.isSelected()) {
             try {
                 uart.openPortDevice();
@@ -516,6 +517,7 @@ public class MainController {
                         uart.getPort().bytesAvailable())).start();
                 setAlarmMessage("null");
             } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "cannot open port", e);
                 connectButton.setSelected(false);
                 connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
                 setAlarmMessage("connect.device");
@@ -525,7 +527,7 @@ public class MainController {
             Xmodem.setSerialPort(null);
             connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
             connectButton.setSelected(false);
-            if (Xmodem.DEBUG) System.out.println("port is closed");
+            LOGGER.info("port is closed");
         }
     }
 

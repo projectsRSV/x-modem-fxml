@@ -1,14 +1,15 @@
 package sample.parsers;
 
 
-import sample.xmodem.Xmodem;
-
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 public class OperSetParser {
+    private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
+
     private Set<String> acknowledgeList;
 
     public OperSetParser(Set<String> acknowledgeList) {
@@ -27,7 +28,7 @@ public class OperSetParser {
             if (!"".equals(s))
                 list.add(s);
         }
-        if (Xmodem.DEBUG) System.out.println(Arrays.asList(list));
+        LOGGER.info(list.toString());
         for (String s : list) {
             acknowledgeList.add(s);
         }

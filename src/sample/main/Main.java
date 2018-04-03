@@ -7,9 +7,20 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import sample.utils.I18N;
-import sample.xmodem.Xmodem;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.logging.LogManager;
 
 public class Main extends Application {
+    private static final LogManager logManager = LogManager.getLogManager();
+    static {
+        try {
+            logManager.readConfiguration(new FileInputStream("resources/log.properties"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -21,8 +32,8 @@ public class Main extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/GUI.css").toExternalForm());
         primaryStage.setScene(scene);
         setUserAgentStylesheet(STYLESHEET_CASPIAN);
-        if (Xmodem.DEBUG) primaryStage.setX(1370);
-//        if (Xmodem.DEBUG) primaryStage.setX(770);
+        primaryStage.setX(1370);
+//        primaryStage.setX(770);
         primaryStage.setResizable(false);
         primaryStage.show();
     }

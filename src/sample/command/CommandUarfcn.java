@@ -10,16 +10,10 @@ public class CommandUarfcn implements MakeCommandInt {
     private List<String> uarfcnList = new ArrayList<>();
     private boolean setUarfcn;
 
-    public CommandUarfcn() {
-    }
-
-    public CommandUarfcn(List<String> uarfcnList) {
-        this.uarfcnList = uarfcnList;
-    }
-
     @Override
     public String getCommand() {
         String request = Commands.SET_FREQ.getCommand() + index + ",";
+        if (uarfcnList.isEmpty()) return "";
         for (String s : uarfcnList) {
             request = request + s + ",";
         }
