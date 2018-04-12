@@ -4,7 +4,7 @@ package sample.command;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public enum Commands implements MakeCommandInt{
+public enum Commands implements MakeCommandInt {
     SET_ALL {
         @Override
         public String getCommand() {
@@ -95,5 +95,28 @@ public enum Commands implements MakeCommandInt{
         public boolean isValid() {
             return false;
         }
+    },
+    DEL_SCANS {
+        @Override
+        public String getCommand() {
+            return "AT+DEL_ALL_RECS=1";
+        }
+
+        @Override
+        public boolean isValid() {
+            return false;
+        }
+    },
+    SCAN_OPER {
+        @Override
+        public String getCommand() {
+            return "AT+SCAN_OP=";
+        }
+
+        @Override
+        public boolean isValid() {
+            return false;
+        }
     };
+
 }

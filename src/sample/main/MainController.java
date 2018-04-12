@@ -2,6 +2,7 @@ package sample.main;
 
 import com.fazecast.jSerialComm.SerialPort;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -22,6 +23,7 @@ import sample.parsers.OperParser;
 import sample.parsers.OperSetParser;
 import sample.parsers.UarfcnParser;
 import sample.task.SaveTask;
+import sample.task.ScanThread;
 import sample.utils.I18N;
 import sample.xmodem.Uart;
 import sample.xmodem.Xmodem;
@@ -29,9 +31,11 @@ import sample.xmodem.Xmodem;
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.net.PortUnreachableException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -112,6 +116,10 @@ public class MainController {
     @FXML
     private Button readButton;
     @FXML
+    private Button delButton;
+    @FXML
+    private ToggleButton scanButton;
+    @FXML
     private Label notification;
     @FXML
     private Menu saveMenu;
@@ -136,6 +144,7 @@ public class MainController {
     private List<MakeCommandInt> listUarfcn = Arrays.asList(new CommandUarfcn(),
             new CommandUarfcn(), new CommandUarfcn(), new CommandUarfcn());
     private Uart uart;
+    private ScheduledExecutorService executorService;
 
     @FXML
     private void initialize() {
@@ -192,85 +201,9 @@ public class MainController {
         label.setScaleY(1.0);
     }
 
-    private void createMainField() {
-        connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
-        scanningMenuItem.textProperty().bind(I18N.createStringBinding("menu.scan"));
-        readButton.textProperty().bind(I18N.createStringBinding("button.read"));
-        readButton.setOnMouseEntered(event -> readButton.setEffect(new Lighting()));
-        readButton.setOnMouseExited(event -> readButton.setEffect(null));
-        Tooltip writeTooltip = new Tooltip();
-        writeTooltip.textProperty().bind(I18N.createStringBinding("tooltip.write"));
-        writeButton.setTooltip(writeTooltip);
-        Tooltip readTooltip = new Tooltip();
-        readTooltip.textProperty().bind(I18N.createStringBinding("tooltip.read"));
-        readButton.setTooltip(readTooltip);
-
-        connectButton.setOnMouseEntered(event -> connectButton.setEffect(new Lighting()));
-//        connectButton.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> connectButton.setEffect(new Lighting()));
-        connectButton.setOnMouseExited(event -> connectButton.setEffect(null));
-
-        writeButton.textProperty().bind(I18N.createStringBinding("button.write"));
-        writeButton.setOnMouseEntered(event -> writeButton.setEffect(new Lighting()));
-        writeButton.setOnMouseExited(event -> writeButton.setEffect(null));
-        notification.getStyleClass().add("label-notif-main");
-
-        operatorLabel1.getStyleClass().add("label-operator-main-norm");
-        operatorLabel2.getStyleClass().add("label-operator-main-norm");
-        operatorLabel3.getStyleClass().add("label-operator-main-norm");
-        operatorLabel4.getStyleClass().add("label-operator-main-norm");
-
-        Tooltip tooltip = new Tooltip();
-        tooltip.textProperty().bind(I18N.createStringBinding("tooltip.operator"));
-        operatorLabel1.setTooltip(tooltip);
-        operatorLabel2.setTooltip(tooltip);
-        operatorLabel3.setTooltip(tooltip);
-        operatorLabel4.setTooltip(tooltip);
-
-        operatorLabel1.textProperty().bind(I18N.createStringBinding("title.operator", 1));
-        operatorLabel2.textProperty().bind(I18N.createStringBinding("title.operator", 2));
-        operatorLabel3.textProperty().bind(I18N.createStringBinding("title.operator", 3));
-        operatorLabel4.textProperty().bind(I18N.createStringBinding("title.operator", 4));
-        longNameOp1.promptTextProperty().bind(I18N.createStringBinding("prompt.long.text"));
-        longNameOp2.promptTextProperty().bind(I18N.createStringBinding("prompt.long.text"));
-        longNameOp3.promptTextProperty().bind(I18N.createStringBinding("prompt.long.text"));
-        longNameOp4.promptTextProperty().bind(I18N.createStringBinding("prompt.long.text"));
-        shortNameOp1.promptTextProperty().bind(I18N.createStringBinding("prompt.short.text"));
-        shortNameOp2.promptTextProperty().bind(I18N.createStringBinding("prompt.short.text"));
-        shortNameOp3.promptTextProperty().bind(I18N.createStringBinding("prompt.short.text"));
-        shortNameOp4.promptTextProperty().bind(I18N.createStringBinding("prompt.short.text"));
-
-        SpinnerValueFactory<Integer> valueFactory1 = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1);
-        SpinnerValueFactory<Integer> valueFactory2 = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1);
-        SpinnerValueFactory<Integer> valueFactory3 = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1);
-        SpinnerValueFactory<Integer> valueFactory4 = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1);
-        spinnerMNC1.setValueFactory(valueFactory1);
-        spinnerMNC2.setValueFactory(valueFactory2);
-        spinnerMNC3.setValueFactory(valueFactory3);
-        spinnerMNC4.setValueFactory(valueFactory4);
-
-        longNameOp1.setTextFormatter(limitString(14));
-        longNameOp2.setTextFormatter(limitString(14));
-        longNameOp3.setTextFormatter(limitString(14));
-        longNameOp4.setTextFormatter(limitString(14));
-
-        shortNameOp1.setTextFormatter(limitString(4));
-        shortNameOp2.setTextFormatter(limitString(4));
-        shortNameOp3.setTextFormatter(limitString(4));
-        shortNameOp4.setTextFormatter(limitString(4));
-
-        fieldMCC1.setTextFormatter(limitDigit(3));
-        fieldMCC2.setTextFormatter(limitDigit(3));
-        fieldMCC3.setTextFormatter(limitDigit(3));
-        fieldMCC4.setTextFormatter(limitDigit(3));
-
-        fieldMCC1.setPromptText("255");
-        fieldMCC2.setPromptText("255");
-        fieldMCC3.setPromptText("255");
-        fieldMCC4.setPromptText("255");
-    }
-
     @FXML
     private void writeButtonHandler() {
+        Xmodem.read(1000, uart.getPort().bytesAvailable());
         Task task = new Task() {
             @Override
             protected Object call() throws Exception {
@@ -334,38 +267,38 @@ public class MainController {
                 }
                 if (!uart.getPort().isOpen()) throw new NullPointerException();
 
-                Set<String> acknowledgeSet = new HashSet<>();
-                OperSetParser operSetParser = new OperSetParser(acknowledgeSet);
+                Set<String> acknowledgeSet;
                 for (MakeCommandInt m : operList) {
                     do {
-                        SendCommand.send(m);
-                        operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, 285));
+                        SendCommand.send(m.getCommand());
+                        acknowledgeSet = OperSetParser.parseData(Xmodem.read(2000, 285));
                     } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("--- SET OPERATOR ---"));
                 }
                 updateProgress(3, max);
                 do {
-                    SendCommand.send(Commands.DEL_FREQ);
-                    operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 27));
+                    SendCommand.send(Commands.DEL_FREQ.getCommand());
+                    acknowledgeSet = OperSetParser.parseData(Xmodem.read(1000, 27));
                 } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("3G base file removed."));
                 updateProgress(5, max);
                 for (MakeCommandInt m : listUarfcn) {
                     if (!m.getCommand().equals("")) {
                         do {
-                            SendCommand.send(m);
-                            operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 21));
+                            SendCommand.send(m.getCommand());
+                            acknowledgeSet = OperSetParser.parseData(Xmodem.read(1000, 21));
                         } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Adding to Base!"));
                     }
                 }
                 updateProgress(7, max);
                 do {
-                    SendCommand.send(Commands.REFRESH);
-                    operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 4));
+                    SendCommand.send(Commands.REFRESH.getCommand());
+                    acknowledgeSet = OperSetParser.parseData(Xmodem.read(1000, 4));
                 } while (!acknowledgeSet.contains("OK"));
                 updateProgress(9, max);
-
                 if (timeSynchMenuItem.isSelected()) {
-                    SendCommand.send(Commands.SET_CLOCK);
-                    operSetParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 6));
+                    do {
+                        SendCommand.send(Commands.SET_CLOCK.getCommand());
+                        acknowledgeSet = OperSetParser.parseData(Xmodem.read(1000, 6));
+                    } while (!acknowledgeSet.contains("OK"));
                 }
                 updateProgress(max, max);
                 TimeUnit.MILLISECONDS.sleep(300);
@@ -376,22 +309,58 @@ public class MainController {
     }
 
     @FXML
+    private void delScans() {
+        Xmodem.read(1000, uart.getPort().bytesAvailable());
+        try {
+            Set<String> acknowledgeSet;
+            do {
+                SendCommand.send(Commands.DEL_SCANS.getCommand());
+                acknowledgeSet = OperSetParser.parseData(Xmodem.read(1000, 11));
+            } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Done!"));
+            LOGGER.info("remove scans");
+        } catch (PortUnreachableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void scanOperators(ActionEvent event) {
+        ToggleButton button = (ToggleButton) event.getSource();
+        ScanThread task = new ScanThread();
+        task.setUart(uart);
+        task.setPriStage((Stage) readButton.getScene().getWindow());
+        if (button.isSelected()) {
+            executorService = Executors.newScheduledThreadPool(1);
+            LOGGER.info("press scan button");
+            executorService.scheduleWithFixedDelay(task, 0, 1, TimeUnit.SECONDS);
+            readButton.setDisable(true);
+            writeButton.setDisable(true);
+            delButton.setDisable(true);
+        } else {
+            readButton.setDisable(false);
+            writeButton.setDisable(false);
+            delButton.setDisable(false);
+            LOGGER.info("release scan button");
+            executorService.shutdown();
+        }
+    }
+
+    @FXML
     private void readButtonHandler() {
         Task task = new Task() {
             @Override
             protected Object call() throws Exception {
                 if (!uart.getPort().isOpen()) throw new NullPointerException();
-                Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, uart.getPort().bytesAvailable());
-                SendCommand.send(Commands.READ_FREQ);
+                Xmodem.read(1000, uart.getPort().bytesAvailable());
+                SendCommand.send(Commands.READ_FREQ.getCommand());
                 updateProgress(1, 5);
                 UarfcnParser uarfcnParser = new UarfcnParser(listUarfcn);
-                uarfcnParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 237));
-                SendCommand.send(Commands.READ_MAIN);
+                uarfcnParser.parseData(Xmodem.read(1000, 237));
+                SendCommand.send(Commands.READ_MAIN.getCommand());
                 updateProgress(3, 5);
                 OperParser operParser = new OperParser(guiLists);
-                operParser.parseData(Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 261));
+                operParser.parseData(Xmodem.read(1000, 261));
                 updateProgress(5, 5);
-//                TimeUnit.MILLISECONDS.sleep(300);
                 return null;
             }
         };
@@ -446,7 +415,7 @@ public class MainController {
     }
 
     @FXML
-    private void saveFile(Event event) {
+    private void saveFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.titleProperty().bind(I18N.createStringBinding("save.title"));
         if (((MenuItem) event.getSource()).getText().endsWith(".txt")) fileChooser.getExtensionFilters().add(
@@ -506,29 +475,121 @@ public class MainController {
     }
 
     @FXML
-    private void connectBtnHandler() {
-        if (connectButton.isSelected()) {
+    private void connectHandler(ActionEvent event) {
+        ToggleButton button = (ToggleButton) event.getSource();
+        if (button.isSelected()) {
             try {
                 uart.openPortDevice();
                 Xmodem.setSerialPort(uart.getPort());
-                connectButton.setSelected(true);
-                connectButton.textProperty().bind(I18N.createStringBinding("button.disconnect"));
-                new Thread(() -> Xmodem.read(SerialPort.TIMEOUT_READ_BLOCKING, 2000,
+//                button.setSelected(true);
+                button.textProperty().bind(I18N.createStringBinding("button.disconnect"));
+                new Thread(() -> Xmodem.read(2000,
                         uart.getPort().bytesAvailable())).start();
                 setAlarmMessage("null");
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "cannot open port", e);
-                connectButton.setSelected(false);
-                connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
+                button.setSelected(false);
+                button.textProperty().bind(I18N.createStringBinding("button.connect"));
                 setAlarmMessage("connect.device");
             }
         } else {
             uart.getPort().closePort();
             Xmodem.setSerialPort(null);
-            connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
-            connectButton.setSelected(false);
+            button.textProperty().bind(I18N.createStringBinding("button.connect"));
+//            button.setSelected(false);
             LOGGER.info("port is closed");
         }
+    }
+
+    private void createMainField() {
+        scanningMenuItem.textProperty().bind(I18N.createStringBinding("menu.scan"));
+        connectButton.textProperty().bind(I18N.createStringBinding("button.connect"));
+        connectButton.setOnMouseEntered(event -> connectButton.setEffect(new Lighting()));
+//        connectButton.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> connectButton.setEffect(new Lighting()));
+        connectButton.setOnMouseExited(event -> connectButton.setEffect(null));
+
+        readButton.textProperty().bind(I18N.createStringBinding("button.read"));
+        readButton.setOnMouseEntered(event -> readButton.setEffect(new Lighting()));
+        readButton.setOnMouseExited(event -> readButton.setEffect(null));
+        Tooltip readTooltip = new Tooltip();
+        readTooltip.textProperty().bind(I18N.createStringBinding("tooltip.read"));
+        readButton.setTooltip(readTooltip);
+
+        delButton.textProperty().bind(I18N.createStringBinding("button.delete"));
+        delButton.setOnMouseEntered(event -> delButton.setEffect(new Lighting()));
+        delButton.setOnMouseExited(event -> delButton.setEffect(null));
+        Tooltip delTooltip = new Tooltip();
+        delTooltip.textProperty().bind(I18N.createStringBinding("tooltip.delete"));
+        delButton.setTooltip(delTooltip);
+
+        writeButton.textProperty().bind(I18N.createStringBinding("button.write"));
+        writeButton.setOnMouseEntered(event -> writeButton.setEffect(new Lighting()));
+        writeButton.setOnMouseExited(event -> writeButton.setEffect(null));
+        Tooltip writeTooltip = new Tooltip();
+        writeTooltip.textProperty().bind(I18N.createStringBinding("tooltip.write"));
+        writeButton.setTooltip(writeTooltip);
+
+        scanButton.textProperty().bind(I18N.createStringBinding("button.scan"));
+        scanButton.setOnMouseEntered(event -> scanButton.setEffect(new Lighting()));
+        scanButton.setOnMouseExited(event -> scanButton.setEffect(null));
+        Tooltip scanTooltip = new Tooltip();
+        scanTooltip.textProperty().bind(I18N.createStringBinding("tooltip.scan"));
+        scanButton.setTooltip(scanTooltip);
+
+        notification.getStyleClass().add("label-notif-main");
+        operatorLabel1.getStyleClass().add("label-operator-main-norm");
+        operatorLabel2.getStyleClass().add("label-operator-main-norm");
+        operatorLabel3.getStyleClass().add("label-operator-main-norm");
+        operatorLabel4.getStyleClass().add("label-operator-main-norm");
+
+        Tooltip tooltip = new Tooltip();
+        tooltip.textProperty().bind(I18N.createStringBinding("tooltip.operator"));
+        operatorLabel1.setTooltip(tooltip);
+        operatorLabel2.setTooltip(tooltip);
+        operatorLabel3.setTooltip(tooltip);
+        operatorLabel4.setTooltip(tooltip);
+
+        operatorLabel1.textProperty().bind(I18N.createStringBinding("title.operator", 1));
+        operatorLabel2.textProperty().bind(I18N.createStringBinding("title.operator", 2));
+        operatorLabel3.textProperty().bind(I18N.createStringBinding("title.operator", 3));
+        operatorLabel4.textProperty().bind(I18N.createStringBinding("title.operator", 4));
+        longNameOp1.promptTextProperty().bind(I18N.createStringBinding("prompt.long.text"));
+        longNameOp2.promptTextProperty().bind(I18N.createStringBinding("prompt.long.text"));
+        longNameOp3.promptTextProperty().bind(I18N.createStringBinding("prompt.long.text"));
+        longNameOp4.promptTextProperty().bind(I18N.createStringBinding("prompt.long.text"));
+        shortNameOp1.promptTextProperty().bind(I18N.createStringBinding("prompt.short.text"));
+        shortNameOp2.promptTextProperty().bind(I18N.createStringBinding("prompt.short.text"));
+        shortNameOp3.promptTextProperty().bind(I18N.createStringBinding("prompt.short.text"));
+        shortNameOp4.promptTextProperty().bind(I18N.createStringBinding("prompt.short.text"));
+
+        SpinnerValueFactory<Integer> valueFactory1 = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1);
+        SpinnerValueFactory<Integer> valueFactory2 = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1);
+        SpinnerValueFactory<Integer> valueFactory3 = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1);
+        SpinnerValueFactory<Integer> valueFactory4 = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1);
+        spinnerMNC1.setValueFactory(valueFactory1);
+        spinnerMNC2.setValueFactory(valueFactory2);
+        spinnerMNC3.setValueFactory(valueFactory3);
+        spinnerMNC4.setValueFactory(valueFactory4);
+
+        longNameOp1.setTextFormatter(limitString(14));
+        longNameOp2.setTextFormatter(limitString(14));
+        longNameOp3.setTextFormatter(limitString(14));
+        longNameOp4.setTextFormatter(limitString(14));
+
+        shortNameOp1.setTextFormatter(limitString(4));
+        shortNameOp2.setTextFormatter(limitString(4));
+        shortNameOp3.setTextFormatter(limitString(4));
+        shortNameOp4.setTextFormatter(limitString(4));
+
+        fieldMCC1.setTextFormatter(limitDigit(3));
+        fieldMCC2.setTextFormatter(limitDigit(3));
+        fieldMCC3.setTextFormatter(limitDigit(3));
+        fieldMCC4.setTextFormatter(limitDigit(3));
+
+        fieldMCC1.setPromptText("255");
+        fieldMCC2.setPromptText("255");
+        fieldMCC3.setPromptText("255");
+        fieldMCC4.setPromptText("255");
     }
 
     private static TextFormatter<?> limitString(int i) {

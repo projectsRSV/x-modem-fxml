@@ -147,7 +147,7 @@ public class Xmodem {
                 if (count++ >= 2) throw new RebootDeviceException();
                 timePauseElapsed = true;
                 sendCommand(command);
-                read(SerialPort.TIMEOUT_READ_BLOCKING, 2000, buffSize);
+                read(2000, buffSize);
                 writeData(READY);
                 setPauseThread(3);
             }
@@ -180,8 +180,8 @@ public class Xmodem {
         }
     }
 
-    public static byte[] read(int typeOfBlocking, int timeoutRead, int sizeBuffer) {
-        serialPort.setComPortTimeouts(typeOfBlocking, timeoutRead, 0);
+    public static byte[] read(int timeoutRead, int sizeBuffer) {
+        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, timeoutRead, 0);
         byte[] readBuffer = new byte[sizeBuffer];
         try {
             int numRead = serialPort.readBytes(readBuffer, readBuffer.length);

@@ -3,6 +3,7 @@ package sample.parsers;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -10,13 +11,8 @@ import java.util.logging.Logger;
 public class OperSetParser {
     private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
 
-    private Set<String> acknowledgeList;
-
-    public OperSetParser(Set<String> acknowledgeList) {
-        this.acknowledgeList = acknowledgeList;
-    }
-
-    public void parseData(byte[] bytes) {
+    static public Set<String> parseData(byte[] bytes) {
+        Set<String> acknowledgeList = new HashSet<>();
         acknowledgeList.clear();
         List<String> list = new ArrayList<>();
         String message = "";
@@ -32,5 +28,6 @@ public class OperSetParser {
         for (String s : list) {
             acknowledgeList.add(s);
         }
+        return acknowledgeList;
     }
 }

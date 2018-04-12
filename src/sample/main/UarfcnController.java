@@ -1,6 +1,7 @@
 package sample.main;
 
 
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -60,16 +61,20 @@ public class UarfcnController {
             t.setTextFormatter(MainController.limitDigit(5));
             t.setOnKeyReleased(enableBtnAndSetNotifHandler);
         }
-        saveButton.setOnAction(event -> {
-            operForm.setUarfcnList(new ArrayList<>());
-            for (int i = 0; i < textFieldList.size(); i++) {
-                if (!textFieldList.get(i).getText().isEmpty()) {
-                    operForm.getUarfcnList().add(textFieldList.get(i).getText());
-                }
+
+    }
+
+    @FXML
+    private void saveUarfcn(ActionEvent event) {
+        operForm.setUarfcnList(new ArrayList<>());
+        for (int i = 0; i < textFieldList.size(); i++) {
+            if (!textFieldList.get(i).getText().isEmpty()) {
+                operForm.getUarfcnList().add(textFieldList.get(i).getText());
             }
-            LOGGER.info(operForm.toString());
-            ((Stage) saveButton.getScene().getWindow()).close();
-        });
+        }
+        LOGGER.info("save UARFCN " + operForm.toString());
+        ((Stage) saveButton.getScene().getWindow()).close();
+
     }
 
     private boolean isInRange(String strNumber) {

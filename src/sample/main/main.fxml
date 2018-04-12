@@ -53,7 +53,7 @@
                 <HBox alignment="CENTER" spacing="10.0">
                     <children>
                         <ComboBox fx:id="comboBox" prefHeight="25.0" prefWidth="355.0" HBox.hgrow="NEVER" />
-                        <ToggleButton fx:id="connectButton" mnemonicParsing="false" onAction="#connectBtnHandler" prefHeight="25.0" prefWidth="92.0" text="connect" />
+                        <ToggleButton fx:id="connectButton" mnemonicParsing="false" onAction="#connectHandler" prefHeight="25.0" prefWidth="92.0" text="connect" />
                     </children>
                 </HBox>
                 <GridPane alignment="CENTER" hgap="9.0" prefWidth="480.0" vgap="10.0">
@@ -139,17 +139,33 @@
                         <Insets left="5.0" right="5.0" />
                     </VBox.margin>
                 </GridPane>
-                <HBox maxHeight="40.0" prefHeight="40.0" spacing="100.0">
+                <HBox maxHeight="40.0" prefHeight="40.0" spacing="50.0">
                     <VBox.margin>
                         <Insets top="8.0" />
                     </VBox.margin>
                     <children>
-                        <Button fx:id="readButton" lineSpacing="1.0" maxWidth="80.0" mnemonicParsing="false" onAction="#readButtonHandler" prefHeight="25.0" prefWidth="80.0" text="Read" wrapText="true" />
-                        <Button fx:id="writeButton" maxWidth="80.0" mnemonicParsing="false" onAction="#writeButtonHandler" prefHeight="25.0" prefWidth="80.0" text="Send" />
+                  <HBox spacing="50.0">
+                     <children>
+                              <Button fx:id="readButton" lineSpacing="1.0" maxWidth="80.0" minWidth="60.0" mnemonicParsing="false" onAction="#readButtonHandler" prefHeight="25.0" text="Read" wrapText="true" />
+                              <Button fx:id="writeButton" maxWidth="80.0" minWidth="60.0" mnemonicParsing="false" onAction="#writeButtonHandler" prefHeight="25.0" text="Send" />
+                     </children>
+                     <padding>
+                        <Insets left="50.0" />
+                     </padding>
+                  </HBox>
+                  <HBox spacing="40.0">
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     <children>
+                        <Button fx:id="delButton" maxWidth="80.0" minWidth="60.0" mnemonicParsing="false" onAction="#delScans" prefHeight="25.0" text="Delete" />
+                        <ToggleButton fx:id="scanButton" contentDisplay="CENTER" graphicTextGap="0.0" minWidth="60.0" mnemonicParsing="false" onAction="#scanOperators" prefHeight="25.0" text="Scan" textAlignment="JUSTIFY" />
+                     </children>
+                     <padding>
+                        <Insets left="20.0" />
+                     </padding>
+                  </HBox>
                     </children>
-                    <padding>
-                        <Insets left="132.0" />
-                    </padding>
                     <cursor>
                         <Cursor fx:constant="CLOSED_HAND" />
                     </cursor>
