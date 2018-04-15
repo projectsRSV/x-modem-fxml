@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="187.0" prefWidth="459.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.main.AlarmController">
+   <top>
+      <HBox spacing="20.0" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets top="15.0" />
+         </BorderPane.margin>
+         <children>
+            <Label text="Operator:" />
+            <Label fx:id="operatorNum" text="num" />
+         </children>
+         <padding>
+            <Insets left="150.0" />
+         </padding>
+      </HBox>
+   </top>
+   <center>
+      <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <GridPane maxHeight="100.0" maxWidth="210.0" prefHeight="100.0" prefWidth="210.0">
+              <columnConstraints>
+                <ColumnConstraints fillWidth="false" halignment="LEFT" hgrow="NEVER" maxWidth="60.0" minWidth="60.0" prefWidth="60.0" />
+                <ColumnConstraints halignment="CENTER" hgrow="NEVER" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
+                  <ColumnConstraints halignment="CENTER" hgrow="NEVER" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
+                  <ColumnConstraints halignment="CENTER" hgrow="NEVER" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
+                <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
+                <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
+              </rowConstraints>
+               <children>
+                  <Label text="UARFCN:" />
+                  <Label fx:id="uarfcnStartLabel1" text="label" GridPane.columnIndex="1" />
+                  <Label fx:id="uarfcnStartLabel2" text="Label" GridPane.columnIndex="2" />
+                  <Label fx:id="uarfcnStartLabel3" text="Label" GridPane.columnIndex="3" />
+                  <Label text="LAC:" GridPane.rowIndex="1" />
+                  <Label fx:id="lacStartLabel1" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label fx:id="lacStartLabel2" text="Label" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                  <Label fx:id="lacStartLabel3" text="Label" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                  <Label text="RX level:" GridPane.rowIndex="2" />
+                  <Label fx:id="rxStartLabel1" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <Label fx:id="rxStartLabel2" text="Label" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                  <Label fx:id="rxStartLabel3" text="Label" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                  <Label text="time" GridPane.rowIndex="3" />
+                  <Label fx:id="timeStartLabel" prefHeight="17.0" prefWidth="133.0" text="Label Label Label Label" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+               </children>
+               <HBox.margin>
+                  <Insets left="10.0" top="15.0" />
+               </HBox.margin>
+            </GridPane>
+            <GridPane layoutX="15.0" layoutY="25.0" maxHeight="100.0" maxWidth="150.0" prefHeight="100.0" prefWidth="150.0">
+               <columnConstraints>
+                  <ColumnConstraints halignment="CENTER" hgrow="NEVER" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
+                  <ColumnConstraints halignment="CENTER" hgrow="NEVER" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
+                  <ColumnConstraints halignment="CENTER" hgrow="NEVER" maxWidth="50.0" minWidth="10.0" prefWidth="50.0" />
+               </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" valignment="CENTER" vgrow="NEVER" />
+               </rowConstraints>
+               <children>
+                  <Label fx:id="uarfcnEndLabel1" text="label" />
+                  <Label fx:id="uarfcnEndLabel2" text="Label" GridPane.columnIndex="1" />
+                  <Label fx:id="uarfcnEndLabel3" text="Label" GridPane.columnIndex="2" />
+                  <Label fx:id="lacEndLabel1" text="Label" GridPane.rowIndex="1" />
+                  <Label fx:id="lacEndLabel2" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label fx:id="lacEndLabel3" text="Label" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                  <Label fx:id="rxEndLabel1" text="Label" GridPane.rowIndex="2" />
+                  <Label fx:id="rxEndLabel2" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <Label fx:id="rxEndLabel3" text="Label" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                  <Label fx:id="timeEndLabel" prefHeight="17.0" prefWidth="133.0" text="Label Label Label Label" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+               </children>
+               <HBox.margin>
+                  <Insets left="60.0" top="15.0" />
+               </HBox.margin>
+            </GridPane>
+         </children>
+      </HBox>
+   </center>
+</BorderPane>

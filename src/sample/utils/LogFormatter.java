@@ -14,11 +14,11 @@ public class LogFormatter extends Formatter {
     public String format(LogRecord record) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("[")
-                .append(dateFormat.format(new Date(record.getMillis())))
+                .append(String.valueOf(dateFormat.format(new Date(record.getMillis()))))
                 .append("]")
-                .append(" ")
+                .append(String.format("%-30s", record.getLoggerName()))
                 .append(record.getLevel().getLocalizedName())
-                .append(": ")
+                .append(String.format("%-4s", ": "))
                 .append(record.getMessage())
                 .append("\n");
         return stringBuilder.toString();

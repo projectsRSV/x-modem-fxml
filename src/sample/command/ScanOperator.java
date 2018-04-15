@@ -18,8 +18,8 @@ public class ScanOperator {
     private List<Integer> cidList = new ArrayList<>();
     private List<Integer> rxList = new ArrayList<>();
     private BooleanProperty isCatcher = new SimpleBooleanProperty();
-    private String startTime;
-    private String endTime;
+    private String time;
+//    private String endTime;
 
     public boolean isIsCatcher() {
         return isCatcher.get();
@@ -37,21 +37,21 @@ public class ScanOperator {
         this.isCatcher.set(isCatcher);
     }
 
-    public String getStartTime() {
-        return startTime;
+    public String getTime() {
+        return time;
     }
 
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
+    public void setTime(String time) {
+        this.time = time;
     }
 
-    public String getEndTime() {
-        return endTime;
-    }
+//    public String getEndTime() {
+//        return endTime;
+//    }
 
-    public void setEndTime(String endTime) {
-        this.endTime = endTime;
-    }
+//    public void setEndTime(String endTime) {
+//        this.endTime = endTime;
+//    }
 
     public void setIdOper(int idOper) {
         this.idOper = idOper;
@@ -111,8 +111,7 @@ public class ScanOperator {
                 ", cidList=" + cidList +
                 ", rxList=" + rxList +
                 ", isCatcher=" + isCatcher +
-                ", startTime='" + startTime + '\'' +
-                ", endTime='" + endTime + '\'' +
+                ", time='" + time + '\'' +
                 '}';
     }
 }

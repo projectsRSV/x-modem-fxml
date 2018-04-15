@@ -25,8 +25,8 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("main.fxml"));
-        primaryStage.titleProperty().bind(I18N.createStringBinding("title.stage", 1, 5));
-        primaryStage.getIcons().add(new Image("/css/antenna.png"));
+        primaryStage.titleProperty().bind(I18N.createStringBinding("title.stage", 1, 6));
+        primaryStage.getIcons().add(new Image("/images/antenna.png"));
         Scene scene = new Scene(root, 515, 315);
 //        scene.getStylesheets().add("/css/GUI.css");
         scene.getStylesheets().add(getClass().getResource("/css/GUI.css").toExternalForm());

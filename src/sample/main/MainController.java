@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+//-javaagent:c:\ScenicView.jar
 public class MainController {
     private final static Logger LOGGER = Logger.getLogger(MethodHandles.lookup().lookupClass().getName());
 
@@ -145,6 +146,8 @@ public class MainController {
             new CommandUarfcn(), new CommandUarfcn(), new CommandUarfcn());
     private Uart uart;
     private ScheduledExecutorService executorService;
+    Thread thread;
+    ScanThread task;
 
     @FXML
     private void initialize() {
@@ -165,7 +168,7 @@ public class MainController {
     private void makeLabelActive(MouseEvent event) {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("uarfcn.fxml"));
         Stage uarfcnStage = new Stage();
-        uarfcnStage.getIcons().add(new Image("/css/antenna.png"));
+        uarfcnStage.getIcons().add(new Image("/images/antenna.png"));
         uarfcnStage.setResizable(false);
         uarfcnStage.setX(event.getScreenX() - 50);
         uarfcnStage.setY(event.getScreenY() + 20);
@@ -310,29 +313,34 @@ public class MainController {
 
     @FXML
     private void delScans() {
-        Xmodem.read(1000, uart.getPort().bytesAvailable());
-        try {
-            Set<String> acknowledgeSet;
-            do {
-                SendCommand.send(Commands.DEL_SCANS.getCommand());
-                acknowledgeSet = OperSetParser.parseData(Xmodem.read(1000, 11));
-            } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Done!"));
-            LOGGER.info("remove scans");
-        } catch (PortUnreachableException e) {
-            e.printStackTrace();
-        }
+        executorService = Executors.newScheduledThreadPool(1);
+        executorService.submit(() -> {
+            Xmodem.read(1000, uart.getPort().bytesAvailable());
+            try {
+                Set<String> acknowledgeSet;
+                do {
+                    SendCommand.send(Commands.DEL_SCANS.getCommand());
+                    acknowledgeSet = OperSetParser.parseData(Xmodem.read(1000, 11));
+                } while (!acknowledgeSet.contains("OK") && !acknowledgeSet.contains("Done!"));
+                LOGGER.info("remove scans");
+            } catch (PortUnreachableException e) {
+                e.printStackTrace();
+            }
+        });
+        executorService.shutdown();
     }
 
     @FXML
     private void scanOperators(ActionEvent event) {
         ToggleButton button = (ToggleButton) event.getSource();
-        ScanThread task = new ScanThread();
-        task.setUart(uart);
-        task.setPriStage((Stage) readButton.getScene().getWindow());
         if (button.isSelected()) {
+            task = new ScanThread();
+            task.setUart(uart);
+            task.setPriStage((Stage) readButton.getScene().getWindow());
             executorService = Executors.newScheduledThreadPool(1);
             LOGGER.info("press scan button");
-            executorService.scheduleWithFixedDelay(task, 0, 1, TimeUnit.SECONDS);
+//            executorService.scheduleWithFixedDelay(task, 0, 1, TimeUnit.SECONDS);
+            executorService.submit(task);
             readButton.setDisable(true);
             writeButton.setDisable(true);
             delButton.setDisable(true);
@@ -341,7 +349,9 @@ public class MainController {
             writeButton.setDisable(false);
             delButton.setDisable(false);
             LOGGER.info("release scan button");
-            executorService.shutdown();
+//            thread.interrupt();
+//            executorService.shutdown();
+            task.interrrupt();
         }
     }
 

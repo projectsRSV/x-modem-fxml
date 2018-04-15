@@ -63,12 +63,12 @@ public class ScanParser {
         operator.setRxList(newOperator.getRxList());
         operator.setIdOper(newOperator.getIdOper());
         operator.setScanNum(newOperator.getScanNum());
-//        operator.setStartTime(newOperator.getStartTime());
-//        operator.setEndTime(newOperator.getEndTime());
-//        operator.setIsCatcher(newOperator.isIsCatcher());
+        if (operator.getIdOper() == 1) {
+            System.out.println();
+        }
         if (tempLastSum != tempPrevSum) {
-            LOGGER.info(String.format("lastSum= %d prevSum= %d isCatcher= %b", tempLastSum, tempPrevSum, operator.isIsCatcher()));
             operator.setIsCatcher(!operator.isIsCatcher());
+            LOGGER.info(String.format("lastSum= %d prevSum= %d isCatcher= %b", tempLastSum, tempPrevSum, operator.isIsCatcher()));
         }
     }
 }

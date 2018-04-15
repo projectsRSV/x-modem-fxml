@@ -38,3 +38,8 @@
     -fx-font-size: 14;
     -fx-font-weight: normal;
 }
+.label-headers {
+    /*-fx-font-weight: normal;*/
+    -fx-font-weight: bold;
+    -fx-text-fill: #164d24;
+}
